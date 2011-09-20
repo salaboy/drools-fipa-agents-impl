@@ -1,0 +1,31 @@
+
+/*
+    Domain-Specific, concrete routing rules.
+    Can exploit JsonPath / XPath queries on a message's
+    encoded form for type-unsafe checks, in addition to
+    standard pattern matching on a message content
+    represented in object form
+
+*/
+
+
+package org.drools.fipa;
+
+
+import org.drools.fipa.ACLMessage;
+import org.drools.fipa.ACLMessageFactory;
+import org.drools.fipa.body.acts.Inform;
+import org.drools.fipa.body.content.Info;
+import org.drools.fipa.InspectMessageHelper;
+import mock.MockFact;
+
+// ACL message factory, to generate responses
+global ACLMessageFactory aclFactory;
+
+
+
+
+
+
+
+

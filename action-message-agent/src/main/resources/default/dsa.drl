@@ -1,0 +1,26 @@
+package org.drools.fipa;
+
+
+import org.drools.fipa.ACLMessage;
+import org.drools.runtime.StatefulKnowledgeSession;
+import java.util.Queue;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

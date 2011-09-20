@@ -1,0 +1,26 @@
+package org.drools.test;
+
+import org.drools.fipa.body.content.*;
+
+rule "Log"
+when
+    $o : Object()
+then
+    System.out.println("SESSION #1 >>> " + $o);
+end
+
+rule "Action_Request : deliverMessage"
+when
+    $a: Action( actionName == "deliverMessage" )
+
+then
+    System.out.println("Executing deliverMessage = "+$a+"--(args)->"+$a.getArgs());
+    retract($a);
+    
+    //insert( new MessageDeliveredResponse());
+end
+
+query deliverMessage(   )
+    //MessageDeliveredResponse( $x, $return ;)
+    Object()
+end
