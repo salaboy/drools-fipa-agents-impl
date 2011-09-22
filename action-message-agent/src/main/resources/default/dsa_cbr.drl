@@ -15,16 +15,44 @@ package org.drools.fipa;
 import org.drools.fipa.ACLMessage;
 import org.drools.fipa.ACLMessageFactory;
 import org.drools.fipa.body.acts.Inform;
-import org.drools.fipa.body.content.Info;
+import org.drools.fipa.body.content.*;
 import org.drools.fipa.InspectMessageHelper;
 import mock.MockFact;
-
 // ACL message factory, to generate responses
 global ACLMessageFactory aclFactory;
 
 
+rule "Mapping"
+when
+then
+    insert( new SessionMapping("patient1","session1") );
+    
+end
 
 
+rule "Route_Encoded_JSON"
+
+when
+  
+    $msg : ACLMessage( $msgId : id, $b : body, encoding == Encodings.JSON  )
+    //$patientId : String( this != null ) from InspectMessageHelper.inspect($msg,"$..name[0]")
+    mapSession( "patient1" , $sessionId ; )
+    
+then
+    System.err.println("Routing message " + $msgId + " (JSON)" );
+    insert( new Destination($msgId, $sessionId) );
+end
+
+rule "Route_Encoded_XML"
+
+when
+    $msg : ACLMessage( $msgId : id, $b : body, encoding == Encodings.XML )
+    //$patientId : String( this != null ) from InspectMessageHelper.inspect($msg,"$..name[0]")
+    mapSession( "patient1" , $sessionId ; )
+then
+    System.err.println("Routing message " + $msgId + " (XML)"  );
+    insert( new Destination($msgId, $sessionId) );
+end
 
 
 

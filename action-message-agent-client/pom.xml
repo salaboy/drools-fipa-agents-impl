@@ -18,7 +18,7 @@
   <dependencies>
     <dependency>
       <groupId>org.drools.fipa</groupId>
-      <artifactId>dss-domain-client-example</artifactId>
+      <artifactId>action-message-agent-model</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -129,7 +129,7 @@
         </dependencies>
         <configuration>
           <webApp>../action-message-agent/target/action-message-agent-service.war</webApp>
-          <jettyConfig>src/test/resources/jetty.xml</jettyConfig>
+          <jettyConfig>../action-message-agent-client/src/test/resources/jetty.xml</jettyConfig>
           <stopKey>foo</stopKey>
           <stopPort>9999</stopPort>
           <webAppConfig>

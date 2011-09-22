@@ -9,5 +9,6 @@
   <modules>
     <module>action-message-agent</module>
     <module>action-message-agent-client</module>
+    <module>action-message-agent-model</module>
   </modules>
 </project>

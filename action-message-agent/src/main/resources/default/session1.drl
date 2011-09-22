@@ -1,6 +1,15 @@
 package org.drools.test;
 
 import org.drools.fipa.body.content.*;
+import org.drools.fipa.action.message.*;
+import java.util.ArrayList;
+import java.util.List;
+global java.util.Map channels;
+
+
+declare MessageDeliveredResponse
+    refId : String
+end
 
 rule "Log"
 when
@@ -9,18 +18,59 @@ then
     System.out.println("SESSION #1 >>> " + $o);
 end
 
-rule "Action_Request : deliverMessage"
-when
-    $a: Action( actionName == "deliverMessage" )
-
-then
-    System.out.println("Executing deliverMessage = "+$a+"--(args)->"+$a.getArgs());
-    retract($a);
-    
-    //insert( new MessageDeliveredResponse());
+rule "Insert Available Channels"
+    salience -1
+    when
+    then
+        insert(new Channel("SMS", "http://webservice/sms/invoke"));
 end
 
-query deliverMessage(   )
-    //MessageDeliveredResponse( $x, $return ;)
-    Object()
+
+
+rule "Deliver Message Action Found"
+    when
+        $action: Action(actionName == "deliverMessage",
+                        keySet contains "refId",
+                        $refId : this["refId"],
+                        keySet contains "mainRecipients",
+                        $mainRecipients : this["mainRecipients"]
+                        )
+    then
+        System.out.println(" Action RefId >>> " + $refId );    
+        System.out.println(" Action Main Recipients >>> " + $mainRecipients );
+
+        insert(new Recipient((String)$refId, (String)$mainRecipients));
+end
+
+
+
+
+rule "Invoke Channel"
+    salience 1
+    when
+        $action: Action(actionName == "deliverMessage",
+                        keySet contains "refId",
+                        $refId : this["refId"],
+                        keySet contains "type",
+                        $type : this["type"])
+        $channel: Channel(type == $type)
+        $recipients: ArrayList(size > 0) from collect (Recipient(refId == $refId))
+
+    then
+        System.out.println(" Invoking channel endpoint >>> " + $channel.getEndpoint());
+        //channels.get($channel.getEndpoint()).invoke(List<Recipient> resolvedRecipients);
+        for(Object rec: $recipients){
+            Recipient recip = (Recipient)rec;
+            System.out.println(" Invoking channel for Recipient >>> " + recip);
+        }
+
+        insert(new MessageDeliveredResponse((String)$refId));
+end
+
+
+query deliverMessage( String $refId, String $conversationId, 
+                        String $subjectabout, String $header, 
+                    String $body, String $type, String $priority, 
+                    String $status )
+    $return: MessageDeliveredResponse( $refId )
 end
