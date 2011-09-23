@@ -9,6 +9,7 @@ global java.util.Map channels;
 
 declare MessageDeliveredResponse
     refId : String
+    conversationId : String
 end
 
 rule "Log"
@@ -51,6 +52,8 @@ rule "Invoke Channel"
         $action: Action(actionName == "deliverMessage",
                         keySet contains "refId",
                         $refId : this["refId"],
+                        keySet contains "conversationId",
+                        $conversationId : this["conversationId"],
                         keySet contains "type",
                         $type : this["type"])
         $channel: Channel(type == $type)
@@ -64,13 +67,10 @@ rule "Invoke Channel"
             System.out.println(" Invoking channel for Recipient >>> " + recip);
         }
 
-        insert(new MessageDeliveredResponse((String)$refId));
+        insert(new MessageDeliveredResponse((String)$refId, (String) $conversationId));
 end
 
 
-query deliverMessage( String $refId, String $conversationId, 
-                        String $subjectabout, String $header, 
-                    String $body, String $type, String $priority, 
-                    String $status )
-    $return: MessageDeliveredResponse( $refId )
+query deliverMessage( String $refId, String $return)
+    MessageDeliveredResponse($refId, $return; )
 end
