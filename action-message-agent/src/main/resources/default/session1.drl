@@ -71,6 +71,11 @@ rule "Invoke Channel"
 end
 
 
-query deliverMessage( String $refId, String $return)
-    MessageDeliveredResponse($refId, $return; )
+query deliverMessage( String $refId, String $conversationId, String $subjectabout, 
+                        String $mainRecipients, String $header, String $body, 
+                        String $type, String $priority, String $status, String $out)
+        MessageDeliveredResponse()
 end
+
+
+        

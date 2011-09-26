@@ -4,6 +4,7 @@
  */
 package org.drools.fipa;
 
+import org.drools.runtime.rule.Variable;
 import java.util.Map;
 import org.drools.fipa.body.content.Action;
 import java.util.LinkedHashMap;
@@ -48,10 +49,8 @@ public class SynchronousDroolsAgentServiceServiceTest {
     @Test
     public void testRequest() {
         SynchronousDroolsAgentServiceImpl synchronousDroolsAgentServicePort = new SynchronousDroolsAgentServiceImplService().getSynchronousDroolsAgentServiceImplPort();
-        
-        
+                
         ACLMessageFactory factory = new ACLMessageFactory(Encodings.XML);
-
 
         
         Map<String, Object> args = new LinkedHashMap<String, Object>();
@@ -64,6 +63,7 @@ public class SynchronousDroolsAgentServiceServiceTest {
         args.put("type", "SMS");
         args.put("priority", "Low");
         args.put("status", "New");
+        args.put("?out", Variable.v);
         
 
         Action action = MessageContentFactory.newActionContent("deliverMessage", args);
@@ -72,10 +72,13 @@ public class SynchronousDroolsAgentServiceServiceTest {
         List<ACLMessage> answers = synchronousDroolsAgentServicePort.tell(req);
 
         assertNotNull(answers);
-        assertEquals(1, answers.size());
+        assertEquals(2, answers.size());
 
         ACLMessage answer = answers.get(0);
         assertEquals(Act.AGREE, answer.getPerformative());
+        
+        answer = answers.get(1);
+        assertEquals(Act.INFORM_REF, answer.getPerformative());
        
 
     }
