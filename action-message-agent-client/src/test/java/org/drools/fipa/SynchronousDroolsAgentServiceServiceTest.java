@@ -4,7 +4,7 @@
  */
 package org.drools.fipa;
 
-import org.drools.runtime.rule.Variable;
+import org.drools.fipa.body.acts.Inform;
 import java.util.Map;
 import org.drools.fipa.body.content.Action;
 import java.util.LinkedHashMap;
@@ -63,7 +63,7 @@ public class SynchronousDroolsAgentServiceServiceTest {
         args.put("type", "SMS");
         args.put("priority", "Low");
         args.put("status", "New");
-        args.put("?out", Variable.v);
+        
         
 
         Action action = MessageContentFactory.newActionContent("deliverMessage", args);
@@ -78,8 +78,8 @@ public class SynchronousDroolsAgentServiceServiceTest {
         assertEquals(Act.AGREE, answer.getPerformative());
         
         answer = answers.get(1);
-        assertEquals(Act.INFORM_REF, answer.getPerformative());
-       
+        assertEquals(Act.INFORM, answer.getPerformative());
+        System.out.println("ANSWER!!!! - > "+((Inform)answer.getBody()).getProposition().getEncodedContent());
 
     }
 

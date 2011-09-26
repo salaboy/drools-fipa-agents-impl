@@ -9,7 +9,6 @@ global java.util.Map channels;
 
 declare MessageDeliveredResponse
     refId : String
-    conversationId : String
 end
 
 rule "Log"
@@ -67,14 +66,14 @@ rule "Invoke Channel"
             System.out.println(" Invoking channel for Recipient >>> " + recip);
         }
 
-        insert(new MessageDeliveredResponse((String)$refId, (String) $conversationId));
+        insert(new MessageDeliveredResponse((String)$refId));
 end
 
 
 query deliverMessage( String $refId, String $conversationId, String $subjectabout, 
                         String $mainRecipients, String $header, String $body, 
-                        String $type, String $priority, String $status, String $out)
-        MessageDeliveredResponse()
+                        String $type, String $priority, String $status, String $return)
+       $return:= MessageDeliveredResponse()
 end
 
 
