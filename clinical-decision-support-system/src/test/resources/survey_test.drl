@@ -1,0 +1,37 @@
+package org.drools.test;
+
+
+import org.kmr2.mock.SurveyBean;
+
+import org.drools.fipa.body.content.Action;
+import org.drools.informer.*;
+import org.drools.informer.xml.ChangeCollector;
+import org.drools.informer.presentation.*;
+
+
+
+rule "CreateSurvey"
+when
+    $ticket : SurveyTicket(
+                $id : sid
+              )
+    not SurveyBean( questionnaireId == $id )
+then
+    SurveyBean sb = new SurveyBean( $id );
+        sb.setQuestion4(44);
+    insert( sb  );
+    System.out.println("Created surveyt" + sb);
+end
+
+
+rule "FinalizeSurvey"
+when
+    $sb : SurveyBean( $id : questionnaireId, finalQuestion == true )
+then
+
+    org.drools.compiler.DroolsDao dao = new org.drools.compiler.DroolsDao();
+        dao.register("org.kmr2.mock.SurveyBean");
+        dao.initEntityManager("org.kmr2.surveys",drools.getWorkingMemory());
+    System.out.println("SAVE " + $sb);
+end
+

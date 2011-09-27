@@ -1,0 +1,17 @@
+package org.kmr2;
+
+import org.drools.builder.ResourceType;
+import org.drools.io.impl.*;
+
+rule "Init Descriptors Dx"
+salience 999
+when
+then
+    System.out.println("Insert reference to diagnostic model for late loading");
+    ClassPathResource res = new ClassPathResource("org/kmr2/mock/mock_ptsd_diag.pmml");
+        res.setResourceType(ResourceType.PMML);
+        res.setName("MockDiag");
+        res.setDescription("Post Traumatic Stress Disorder Diagnostics");
+    insert( res );
+end
+

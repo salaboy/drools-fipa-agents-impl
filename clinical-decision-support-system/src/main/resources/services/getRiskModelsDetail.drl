@@ -1,0 +1,161 @@
+package org.drools.test;
+
+
+
+import org.drools.fipa.body.content.Action;
+import org.drools.fipa.MessageContentEncoder;
+import org.drools.fipa.Encodings;
+
+import org.drools.informer.*;
+import org.drools.informer.xml.ChangeCollector;
+import org.drools.informer.presentation.*;
+
+import org.drools.io.internal.InternalResource;
+import java.util.List;
+import java.util.ArrayList;
+
+import org.drools.pmml_4_0.ModelMarker;
+import org.drools.pmml_4_0.PMML4Field;
+
+
+
+
+
+
+
+
+
+
+
+
+
+declare GetRiskModelsDetail
+    userId              : String
+    patientId           : String
+    modelIds            : List
+    riskModels          : List
+    successStatus       : boolean       = false
+    statusMessage       : String        = "(ok)"
+end
+
+declare RiskModelDetail
+    modelId             : String
+    position            : int
+    severity            : int
+    title               : String
+    disease             : String
+    relativeRisk        : int
+    relativeRiskRange   : int
+    displayThreshold    : int
+    survey              : SurveyGUIAdapter
+    dxProcessId         : String
+end
+
+
+declare RiskValue
+@format(trait)
+    value   : double
+    context : String
+end
+
+
+
+
+rule "Action_Request : getRiskModelsDetail"
+when
+    $a :  Action( actionName == "getRiskModelsDetail",
+                  $userId    : this["userId"],
+                  $patientId : this["patientId"],
+                  $modelIds : this["modelIds"]
+                )
+    not   GetRiskModelsDetail()
+then
+    GetRiskModelsDetail ans = new GetRiskModelsDetail();
+        ans.setUserId( (String) $userId );
+        ans.setPatientId( (String) $patientId );
+        ans.setModelIds( java.util.Arrays.asList( (String[]) $modelIds ) );
+        ans.setRiskModels( new ArrayList() );
+    insert(ans);
+end
+
+
+
+rule "Action_Request : getRiskModelsDetail - init Models"
+when
+    $a :  Action( actionName == "getRiskModelsDetail",
+                  $userId    : this["userId"],
+                  $patientId : this["patientId"],
+                  $modelIds : this["modelIds"]
+                )
+    $id : String() from $modelIds
+    not   ModelMarker( modelName == $id )
+    $rs : InternalResource( name == $id )
+then
+    manager.addResource( $id, $rs );
+end
+
+
+rule "Action_Request : getRiskModelsDetail - model info"
+when
+    $mm   : ModelMarker( $id : modelName )
+    $res  : InternalResource( name == $id, $descr : description )
+    $grmd : GetRiskModelsDetail( $details : riskModels )
+    not     RiskModelDetail( modelId == $id ) from $details
+then
+    RiskModelDetail rmd = new RiskModelDetail();
+        rmd.setModelId( $id );
+        rmd.setTitle( $descr );
+        rmd.setDisease( $descr );
+    $grmd.getRiskModels().add( rmd );
+    insert( rmd );
+end
+
+
+rule "Action_Request : getRiskModelsDetail - clear"
+salience -9999
+when
+    $a :  Action( actionName == "getRiskModelsDetail" )
+then
+    retract( $a );
+end
+
+
+
+rule "Update Risk I"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+    $fld : PMML4Field( context == $mid, name == "Risk" )
+then
+    RiskValue val = don( $fld, RiskValue.class, true );
+end
+
+rule "Update Risk II"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+           RiskValue( context == $mid, $val : value )
+then
+    $rmd.setRelativeRisk( (int) Math.round( $val * 100 ) ) ;
+end
+
+
+
+rule "Include Survey"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+    $qid : String() from ( $mid+"_Questionnaire" )
+           ?getItemId( $qid, $mid, $surveyId ; )
+           getSurvey( $userId, $patientId, $surveyId, $return ; )
+then
+    $rmd.setSurvey( $return );
+end
+
+
+
+query getRiskModelsDetail( String $userId, String $patientId, String[] $modelIds, Object $return )
+//    $grmd   :  GetRiskModelsDetail( )
+//    $return := String() from MessageContentEncoder.encode( $grmd, Encodings.XML )
+    $return :=  GetRiskModelsDetail( )
+end
+
+
+

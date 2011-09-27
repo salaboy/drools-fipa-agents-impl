@@ -1,0 +1,26 @@
+package org.drools.test;
+
+
+import org.drools.fipa.body.content.Action;
+import org.kmr2.decision.*;
+
+
+
+
+rule "Action_Request : getDiagnosticProcessStatus"
+when
+    $a : Action( actionName == "getDiagnosticProcessStatus",
+                 $processId   : this["dxProcessId"],
+                 $refresh     : this["refresh"],
+                 $patientId   : this["patientId"]
+                )
+then
+    retract( $a );
+end
+
+
+
+
+query getDiagnosticProcessStatus( String $dxProcessId, boolean $refresh, String $patientId, DiagnosticGuideProcess $return )
+    $return := DiagnosticGuideProcess( id == $dxProcessId )
+end

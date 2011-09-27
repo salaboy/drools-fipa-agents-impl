@@ -1,0 +1,26 @@
+package kmr2.test;
+
+import gov.hhs.fha.nhinc.adapter.fact.*;
+import org.drools.fipa.*;
+
+
+
+
+function Interaction newInteraction( String type, String[] ids ) {
+    return new Interaction( type, new java.util.LinkedList( java.util.Arrays.asList( ids ) ) );
+}
+
+
+rule "Appointments"
+when
+    EncounterFactType( $pat : patientId.value )
+then
+    System.out.println(" Patient  " + $pat + " has an encounter ");
+    InteractionTicket ticket = new InteractionTicket( java.util.UUID.randomUUID().toString(),
+                                                      new java.util.ArrayList() );
+
+    ticket.getInteractions().add( newInteraction( "org.kmr2.mock.Form1", new String[] { $pat, "provider" } ) );
+    ticket.getInteractions().add( newInteraction( "org.kmr2.mock.Form2", new String[] { $pat, "provider", "manager" } ) );
+
+    insert( ticket );
+end

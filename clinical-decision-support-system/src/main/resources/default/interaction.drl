@@ -1,0 +1,250 @@
+package org.drools.fipa;
+
+
+import java.util.*;
+import org.drools.base.DroolsQuery;
+import org.drools.expectations.*;
+import org.drools.informer.generator.*;
+import org.drools.informer.*;
+
+
+
+
+declare InteractionTicket
+    id              : String
+    interactions    : List      // <Interaction>
+end
+
+declare TicketActor
+    interactionId   : String   @key
+    actorId         : String   @key
+end
+
+
+declare Interaction
+    type            : String
+    receivers       : List      // <String>
+end
+
+
+declare FormMarker
+    ticketId        : String
+    type            : String
+    formId          : String
+end
+
+declare Alert
+@role( event )
+    ticketId        : String
+    destination     : String
+    formId          : String
+end
+
+
+
+query formMarker( String $ticketId, String $type, String $formId )
+    FormMarker( $ticketId, $type, $formId ; )
+end
+
+query owner( String $formId, String $user )
+    Alert( $ticket, $user, $formId ; )
+end
+
+
+
+
+
+
+
+
+
+
+rule "Open interaction"
+salience 999
+when
+    $ticket : InteractionTicket( $id : id,
+                                 $inters : interactions )
+    $inter : Interaction( receivers.size > 0 ) from $inters
+then
+    insertLogical( $inter );
+end
+
+rule "Interactions"
+when
+    $ticket : InteractionTicket( $id : id,
+                                 $inters : interactions )
+    Interaction( $type : type, receivers.size > 0, $receiver : receivers[0] )
+    formMarker( $id, $type, $formId ; )
+then
+    System.out.println(" Form is ready " + $formId );
+    insert( new Alert( $id, $receiver.toString(), $formId ) );
+end
+
+
+
+rule "Alerts"
+no-loop
+when
+    $al     : Alert( $id, $dest, $formId ; )
+              not TicketActor( $id, $dest ; )
+then
+    System.out.println( " ******************************* " + $al );
+    insert( new TicketActor( $id, $dest ) );
+end
+
+rule "Dispatch"
+salience -200
+when
+              TicketActor( $ticketId, $actorId ; )
+    $list   : List() from accumulate (
+                Alert( $id, $actorId, $formId ; )
+                collectList( $formId )
+              )
+then
+    // Alert manager call goes HERE
+    System.out.println( " ******************************* Deliver to " + $actorId + "  : >> " + $list );
+end
+
+
+
+
+
+
+
+//
+//rule "Escalation"
+//when
+//    $ticket : InteractionTicket( $id : id,
+//                                 $inters : interactions )
+//    $inter : Interaction( $type, $receivers ;)
+//    FormMarker( $id, $type, $formId ; )
+//    $al : Alert( $id, $dest, $formId ; destination memberOf $receivers )
+//check
+//        expect org.drools.informer.Progress( $formId, 100 ; this after[0,1s] $al )
+//            onFulfill {
+//
+//            }
+//            onViolation {
+//                System.err.println( $dest + " did not answer " + $formId );
+//                retract( $al );
+//                $receivers.remove( $dest );
+//                update( $inter );
+//            }
+//
+//        or
+//
+//        expect org.drools.informer.Cancel( $formId ; this after[0,1] $al )
+//            onFulfill {
+//                retract( $al );
+//            }
+//
+//        or
+//
+//        expect org.drools.informer.Failure( $formId ; this after[0,1] $al )
+//            onFulfill {
+//                retract( $al );
+//            }
+//end
+//
+
+
+
+rule "Start"
+when
+    org.drools.informer.Progress( $formId, 0 ; )
+    ?owner( $formId, $user ; )
+then
+    // start HT
+end
+
+rule "Complete"
+when
+    org.drools.informer.Progress( $formId, 100 ; )
+    ?owner( $formId, $user ; )
+then
+    // complete HT
+end
+
+//rule "Cancel"
+//    org.drools.informer.Cancel( $formId ; )
+//    ?owner( $formId, $user ; )
+//when
+//    // cancel HT
+//then
+//
+//end
+//
+//rule "Fail"
+//    org.drools.informer.Failure( $formId ; )
+//    ?owner( $formId, $user ; )
+//when
+//    // cancel HT
+//then
+
+
+
+
+
+rule "Initialize/query forms"
+when
+    DroolsQuery( name == "formMarker", $args : elements )
+    not FormMarker( $args[0], $args[1] ; )
+then
+    System.out.println(" Will create a form for " + $args[0] + " / " + $args[1] );
+    String formId = java.util.UUID.randomUUID().toString();
+
+    insert( new FormMarker( $args[0].toString(),
+                            $args[1].toString(),
+                            formId ) );
+
+    ISurveyable form = FormRegistry.create( $args[1].toString(), formId );
+    insert( form );
+end
+
+
+
+
+
+/*
+
+declare EMRToken
+    id : String
+end
+
+rule "EMR"
+salience 99999999
+when
+    FactType( $patientId : patientId.value )
+    not EMRToken( id == $patientId )
+then
+    System.out.println( " << Initializing session >> " );
+    // factService.load( $patientId )
+    insert( new EMRToken( $patientId ) );
+end
+
+
+rule "LogEMR"
+when
+    EMRToken( $patientId : id )
+then
+    System.out.println(" << Session initialized for patient " + $patientId + " >>");
+end
+*/
+
+
+
+
+
+
+
+
+
+//rule "Log"
+//when
+//    $o : Object()
+//then
+////    if ( ! $o.getClass().getPackage().getName().contains("Expect") ) {
+//    System.err.println( $o );
+////    }
+//end
+

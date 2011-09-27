@@ -1,0 +1,41 @@
+
+
+import org.drools.fipa.body.content.Action;
+//import org.drools.fipa.MessageContentEncoder;
+//import org.drools.fipa.Encodings;
+
+import org.drools.informer.*;
+import org.drools.informer.xml.ChangeCollector;
+import org.drools.informer.presentation.*;
+
+//import org.drools.io.internal.InternalResource;
+//import java.util.List;
+//import java.util.ArrayList;
+//
+//import org.drools.pmml_4_0.ModelMarker;
+//import org.drools.pmml_4_0.PMML4Field;
+
+
+
+
+
+
+rule "Action_Request : setDiagnosticActionStatus"
+when
+    $a : Action( actionName == "setDiagnosticActionStatus",
+                 $processId : this["dxProcessId"],
+                 $actionId : this["actionId"],
+                 $status : this["status"],
+                 $patientId : this["patientId"]
+                 )
+
+then
+
+end
+
+
+
+
+query setDiagnosticActionStatus( String $processId, String $actionId, String $status, String $patientId, String $return )
+    $return := String() from "ok"
+end

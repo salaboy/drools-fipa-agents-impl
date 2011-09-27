@@ -1,0 +1,37 @@
+package org.drools.test;
+
+
+import org.drools.fipa.body.content.Action;
+import org.kmr2.decision.*;
+
+
+
+rule "Action_Request : completeDiagnosticGuideProcess - Complete"
+when
+    $a  : Action( actionName == "completeDiagnosticGuideProcess",
+                 $dxProcessId : this["processId"],
+                 $status      : this["status"] == "Complete",
+                 $patientId   : this["patientId "]
+                )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started" )
+then
+    $dx.setStatus( "Complete" );
+    retract( $a );
+end
+
+rule "Action_Request : completeDiagnosticGuideProcess - Cancel"
+when
+    $a  : Action( actionName == "completeDiagnosticGuideProcess",
+                 $dxProcessId : this["providerId"],
+                 $status      : this["status"] == "Cancel",
+                 $patientId   : this["patientId "]
+                )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started" )
+then
+    retract( $dx );
+    retract( $a );
+end
+
+query completeDiagnosticGuideProcess( String $processId, String $status, String $patientId, String $return )
+    $return := String() from "ok"
+end

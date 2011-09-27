@@ -1,0 +1,64 @@
+package org.kmr2.mock;
+
+import org.drools.informer.generator.FormRegistry;
+import org.drools.informer.generator.Surveyable;
+import org.drools.informer.Question;
+import org.drools.informer.generator.annotations.AllowedAnswers;
+import org.drools.informer.generator.annotations.QuestionMark;
+import org.drools.informer.generator.annotations.Questionable;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Column;
+
+//import org.hibernate.annotations.CollectionOfElements;
+
+
+import java.util.Date;
+import java.util.List;
+
+
+
+declare Surveyable
+end
+
+declare SurveyBean  extends Surveyable
+@Questionable( label = "Name or title of the Survey", language = "EN" )
+@Entity(name = "SurveyBean")
+@Table(name = "SurveyBeanTable" )
+
+    questionnaireId : String @Id  @key
+
+    question1 : Integer =  3
+    @QuestionMark( type = Question.QuestionType.TYPE_NUMBER, label = "Please choose one : ", required = true )
+    @AllowedAnswers( values = { "1=Choice1", "2=Choice2", "3=Choice3", "4=Choice4", "5=Choice5", "6=Choice6" } )
+
+    question2 : String = "Rural"
+    @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = "Please choose domicile : ", required = true )
+    @AllowedAnswers( values = { "Rural=Rural Dom.", "Urban=Urban Dom."} )
+
+//TODO removed due to a clash caused by the hibernate annoatations lib. need to check it
+//    question3 : List
+//    @CollectionOfElements( targetElement = String.class )
+//    @QuestionMark( type = Question.QuestionType.TYPE_LIST, label = "Please choose all hobbies that apply : ", required = true )
+//    @AllowedAnswers( values = { "CMP=Camping", "FSH=Fishing", "GLF=Golf", "HGL=Hang Gliding" } )
+
+    question4 : int     = 99
+    @QuestionMark( type = Question.QuestionType.TYPE_NUMBER, label = "Please enter a numeric value : ", required = false )
+
+    question5 : String
+    @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = "Please enter any value : " )
+
+    question6 : Date
+    @QuestionMark( type = Question.QuestionType.TYPE_DATE, label = "Please enter any date value : ", dateFormat = "dd/MM/yyyy" )
+
+    question7 : int
+    @QuestionMark( type = Question.QuestionType.TYPE_NUMBER, label = "Please enter a numeric value again: ", required = false )
+
+
+    finalQuestion : boolean
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = "Complete", required = false )
+
+
+end

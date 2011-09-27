@@ -1,0 +1,70 @@
+
+/*
+    Domain-Specific, concrete routing rules.
+    Can exploit JsonPath / XPath queries on a message's
+    encoded form for type-unsafe checks, in addition to
+    standard pattern matching on a message content
+    represented in object form
+
+*/
+
+
+package org.drools.fipa;
+
+
+import org.drools.fipa.ACLMessage;
+import org.drools.fipa.ACLMessageFactory;
+import org.drools.fipa.Encodings;
+import org.drools.fipa.InspectMessageHelper;
+import org.drools.fipa.body.acts.Inform;
+import org.drools.fipa.body.content.Info;
+
+// ACL message factory, to generate responses
+global ACLMessageFactory aclFactory;
+
+
+
+
+rule "TestMin"
+when
+then
+    insert( new SessionMapping("surveyPatient","sessionSurvey") );
+end
+
+
+rule "Route_Encoded"
+salience -1
+when
+    $msg : ACLMessage( $msgId : id, $b : body, encoding == Encodings.JSON /* , $patientId : this.inspect("$..name[0]") */ )
+    $patientId : String( this != null ) from InspectMessageHelper.inspect( $msg, "$..patientId[0]" )
+    mapSession( $patientId , $sessionId ; )
+then
+    System.err.println("Routing message " + $msgId + " to session " + $sessionId );
+    insert( new Destination($msgId, $sessionId) );
+end
+
+rule "Route_Encoded_X"
+salience -1
+when
+    $msg : ACLMessage( $msgId : id, $b : body, encoding == Encodings.XML /* , $patientId : this.inspect("$..name[0]") */ )
+    $patientId : String( this != null ) from InspectMessageHelper.inspect( $msg, "//patientId" )
+    mapSession( $patientId , $sessionId ; )
+then
+    System.err.println("Routing message " + $msgId + " to session " + $sessionId );
+    insert( new Destination($msgId, $sessionId) );
+end
+
+
+rule "Route_Encoded_X_map"
+salience -1
+when
+    $msg : ACLMessage( $msgId : id, $b : body, encoding == Encodings.XML /* , $patientId : this.inspect("$..name[0]") */ )
+    $patientId : String( this != null ) from InspectMessageHelper.inspect( $msg, "//key[. = 'patientId']/../value" )
+    mapSession( $patientId , $sessionId ; )
+then
+    System.err.println("Routing message " + $msgId + " to session " + $sessionId );
+    insert( new Destination($msgId, $sessionId) );
+end
+
+
+

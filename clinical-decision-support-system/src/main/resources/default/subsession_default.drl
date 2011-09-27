@@ -1,0 +1,45 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//rule "Log"
+//salience 9999
+//when
+//    $o : Object()
+//then
+//    System.out.println("PATIENT #SURVEY >>> " + $o);
+//end
+//

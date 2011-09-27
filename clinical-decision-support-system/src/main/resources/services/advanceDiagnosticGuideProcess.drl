@@ -1,0 +1,25 @@
+package org.drools.test;
+
+
+import org.drools.fipa.body.content.Action;
+import org.kmr2.decision.*;
+
+
+
+rule "Action_Request : advanceDiagnosticGuideProcess"
+when
+    $a  : Action( actionName == "advanceDiagnosticGuideProcess",
+                 $dxProcessId : this["processId"],
+                 $patientId   : this["patientId "]
+                )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", $steps : steps )
+then
+    System.out.println( "Stepping to " + ($steps.size()) );
+    insert( new DxStep( $dx.getId(), ($steps.size()) ) );
+    retract( $a );
+end
+
+
+query advanceDiagnosticGuideProcess( String $dxProcessId, String $patientId, String $return )
+    $return := DiagnosticGuideProcess( id == $dxProcessId )
+end
