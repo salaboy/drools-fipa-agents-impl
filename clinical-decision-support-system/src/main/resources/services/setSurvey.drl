@@ -45,5 +45,5 @@ then
 end
 
 query setSurvey( String $userId, String $pid, String $questionId, String $value, ChangeGUIAdapter $return   )
-    $return := ChangeGUIAdapter( $sid := surveyId  )
+    $return := ChangeGUIAdapter( $sid := itemId  )
 end

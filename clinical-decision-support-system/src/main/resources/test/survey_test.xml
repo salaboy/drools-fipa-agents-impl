@@ -26,7 +26,7 @@
 
     <resource source="classpath:services/getSurvey.drl" type="DRL" />
     <resource source="classpath:services/setSurvey.drl" type="DRL" />
-    <resource type="DRL" source="classpath:survey_test.drl" />
+    <resource type="DRL" source="classpath:test/survey_test.drl" />
 
 	</add>
 </change-set>

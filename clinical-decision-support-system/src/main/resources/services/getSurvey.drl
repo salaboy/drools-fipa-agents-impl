@@ -34,5 +34,5 @@ end
 
 
 query getSurvey( String $userId, String $patientId, String $surveyId, SurveyGUIAdapter $return )
-    $return := SurveyGUIAdapter( $surveyId := surveyId )
+    $return := SurveyGUIAdapter( $surveyId := itemId )
 end

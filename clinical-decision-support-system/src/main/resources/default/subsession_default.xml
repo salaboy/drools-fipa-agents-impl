@@ -22,19 +22,19 @@
     <resource type="CHANGE_SET" source="classpath:org/drools/informer/informer-changeset.xml" />
 
 
-    <!--<resource type="DRL" source="classpath:default/interaction_declares.drl" />-->
+    <!--<resource type="DRL" source="classpath:declares/interaction_declares.drl" />-->
     <resource type="DRL" source="classpath:default/interaction.drl" />
 
 
-    <resource type="CHANGE_SET" source="classpath:risk_model_list.xml" />
-    <resource type="CHANGE_SET" source="classpath:diag_model_list.xml" />
+    <resource type="CHANGE_SET" source="classpath:test/risk_model_list.xml" />
+    <resource type="CHANGE_SET" source="classpath:test/diag_model_list.xml" />
 
     <resource type="DRL" source="classpath:services/getSurvey.drl" />
     <resource type="DRL" source="classpath:services/setSurvey.drl" />
     <resource type="DRL" source="classpath:services/getRiskModelsDetail.drl" />
 
 
-    <resource type="DRL" source="classpath:services/dxGuide_declares.drl" />
+    <resource type="DRL" source="classpath:declares/dxGuide_declares.drl" />
         <!--  TODO: fix? issue in KnowledgeAgent to load this dynamically -->
     <resource type="DRL" source="classpath:org/kmr2/mock/mock_ptsd_decision.drl" name="MockDecision" description="Post Traumatic Stress Disorder Decision" />
 

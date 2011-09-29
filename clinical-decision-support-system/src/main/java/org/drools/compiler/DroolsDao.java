@@ -2,7 +2,6 @@ package org.drools.compiler;
 
 import org.drools.WorkingMemory;
 import org.drools.reteoo.ReteooRuleBase;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.ejb.Ejb3Configuration;
 
 import javax.persistence.EntityManager;

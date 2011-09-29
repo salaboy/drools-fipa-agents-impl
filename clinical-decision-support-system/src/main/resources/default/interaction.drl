@@ -64,7 +64,7 @@ salience 999
 when
     $ticket : InteractionTicket( $id : id,
                                  $inters : interactions )
-    $inter : Interaction( receivers.size > 0 ) from $inters
+    $inter : Interaction( /*receivers.size > 0*/ ) from $inters
 then
     insertLogical( $inter );
 end
@@ -73,13 +73,22 @@ rule "Interactions"
 when
     $ticket : InteractionTicket( $id : id,
                                  $inters : interactions )
-    Interaction( $type : type, receivers.size > 0, $receiver : receivers[0] )
+    Interaction( $type : type, this memberOf $inters, receivers.size > 0, $receiver : receivers[0] )
     formMarker( $id, $type, $formId ; )
 then
     System.out.println(" Form is ready " + $formId );
     insert( new Alert( $id, $receiver.toString(), $formId ) );
 end
 
+rule "System Interactions"
+when
+    $ticket : InteractionTicket( $id : id,
+                                 $inters : interactions )
+    Interaction( $type : type, this memberOf $inters, receivers.size == 0 )
+    formMarker( $id, $type, $formId ; )
+then
+    System.out.println(" Form is ready " + $formId );
+end
 
 
 rule "Alerts"

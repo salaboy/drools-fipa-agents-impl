@@ -1,0 +1,233 @@
+package org.kmr2.decision;
+
+import org.drools.pmml_4_0.ModelMarker;
+import org.drools.fipa.*;
+import org.drools.base.DroolsQuery;
+
+import org.drools.informer.generator.FormRegistry;
+import org.drools.informer.generator.annotations.Questionable;
+import org.drools.informer.generator.annotations.QuestionMark;
+import org.drools.informer.generator.annotations.AllowedAnswers;
+
+
+
+declare AskAlcohol extends DxAction
+@Questionable( label = "Ask for Alcohol Abuse", language = "EN" )
+//@Entity(name = "AskAlcholForm")
+//@Table(name = "AskAlcoholFormTable" )
+
+    descr           : String            = "Ask for alcohol abuse"
+
+    question : boolean
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Do you abuse alcohol ? ", required = true )
+
+end
+
+
+declare AskDeployment extends DxAction
+@Questionable( label = "Ask for Number of Deployments", language = "EN" )
+//@Entity(name = "AskAlcholForm")
+//@Table(name = "AskAlcoholFormTable" )
+
+    descr           : String            = "Ask for number of deployments "
+
+    question : String
+    @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = " How many times have you been deployed ? ", required = true )
+    @AllowedAnswers( values = { "0=No deployments", "1=Just once", "2+=Two or more times"  } )
+
+end
+
+
+
+
+
+
+rule "Mark"
+when
+then
+    insert( new ModelMarker( "MockDecision", "Decision Model" ) );
+end
+
+
+
+
+
+
+rule "Add AskAlcohol"
+salience 100
+no-loop
+when
+    $dx  : DiagnosticGuideProcess( decModel == "MockDecision", $acts : actions not contains AskAlcohol )
+then
+    $acts.add( AskAlcohol.class );
+    FormRegistry.register( AskAlcohol.class );
+end
+
+
+//rule "Add AskDeployment"
+//salience 100
+//no-loop
+//when
+//    $dx  : DiagnosticGuideProcess( decModel == "MockDecision", $acts : actions not contains AskDeployment )
+//then
+//    $acts.add( AskDeployment.class );
+//    FormRegistry.register( AskDeployment.class );
+//end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule "Close step"
+salience 10
+when
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : steps, $num : steps.size() )
+    $x      : DxStep( dxProcessId == $id, step > 0, step == $num )
+    $prev   : DxDecision( this memberOf $steps, current == true )
+then
+    System.out.println( "Closing " + $prev );
+//    $prev.setCurrent( false );
+    retract( $prev );
+end
+
+
+//rule "Close step II"
+//salience 15
+//when
+//    $dx     : DiagnosticGuideProcess( $id : id, $steps : steps, $num : steps.size() )
+//    $x      : DxStep( dxProcessId == $id, step > 0, step == $num )
+//    $prev   : DxDecision( this memberOf $steps, current == true, $acts : children )
+//    $act    : DxAction() from $acts
+//then
+////    System.out.println( "Killing orphan " + $act );
+//////    $prev.setCurrent( false );
+////    retract( $act );
+//end
+
+
+
+
+
+
+
+
+
+rule "Create step"
+no-loop
+when
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : steps, $num : steps.size() )
+    $x      : DxStep( dxProcessId == $id, step == $num )
+then
+    System.out.println( "Creating new step " + $steps.size() );
+    DxDecision step = new DxDecision( java.util.UUID.randomUUID().toString() );
+        step.setStep( $steps.size() );
+        step.setCurrent( true );
+        step.setChildren( new java.util.ArrayList() );
+    $steps.add( step );
+    update( $dx );
+    insertLogical( step );
+end
+
+
+
+
+
+
+
+
+
+
+
+
+query isUseful( DxAction $act, Double $use )
+    $use := Double() from Math.random()
+end
+
+query ticket( String $className, String $formId, InteractionTicket $ticket )
+    $ticket := InteractionTicket( id == $formId )
+end
+
+query getAction( String $formId, DxAction $act )
+    $act := DxAction( $formId := questionnaireId )
+end
+
+query getForm( String $surveyId, SurveyGUIAdapter $return )
+    $return := SurveyGUIAdapter( $surveyId := itemId )
+end
+
+rule "Initialize action forms"
+salience 9999
+when
+    DroolsQuery( name == "ticket", $args : elements )
+then
+    String ticketId = $args[1].toString();
+    InteractionTicket ticket = new InteractionTicket( ticketId,
+                                                      new java.util.ArrayList() );
+
+    ticket.getInteractions().add( new Interaction( $args[0].toString(), new java.util.ArrayList() ) );
+    System.out.println( "Created " + ticket + " on the fly");
+    insert( ticket );
+end
+
+
+rule "Clone Actions"
+no-loop
+when
+    $dx     : DiagnosticGuideProcess( $id : id, $acts : actions, actions.size() > 0, $steps : steps )
+    $x      : DxStep( dxProcessId == $id, $n : step )
+    $step   : DxDecision( step == $n, this memberOf $steps, $childz : children, current == true )
+              Class( $className : name ) from $acts
+    $tid    : String() from java.util.UUID.randomUUID().toString()
+              ticket( $className, $tid, $ticket ; )
+              formMarker( $tid, $className, $formId ; )
+              getAction( $formId, $act ; )
+              ?isUseful( $act, $util ; )
+              getForm( $formId, $form ; )
+then
+        $act.setUtility( $util );
+        $act.setStatus( "Not Started" );
+        $act.setUtilityLing( "tbd " );
+        $act.setForm( $form );
+    $childz.add( $act );
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule "Remove step marker"
+salience -9999
+when
+    $x : DxStep()
+then
+    retract( $x );
+end

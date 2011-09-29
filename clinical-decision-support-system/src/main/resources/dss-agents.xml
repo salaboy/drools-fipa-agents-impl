@@ -28,7 +28,7 @@
     
     <bean id="agent1-session0" class="org.drools.fipa.DroolsAgentConfiguration$SubSessionDescriptor">
         <constructor-arg value="sessionSurvey"/>
-        <constructor-arg value="survey_test.xml"/>
+        <constructor-arg value="test/survey_test.xml"/>
         <constructor-arg value="NOT_USED_YET"/>
     </bean>  
 

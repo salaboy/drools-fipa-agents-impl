@@ -1,7 +1,5 @@
 package kmr2.agent.test;
 
-import mock.MockFact;
-
 import java.io.Serializable;
 
 public class MockPatient implements Serializable {

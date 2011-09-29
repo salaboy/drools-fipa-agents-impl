@@ -24,19 +24,59 @@
         <dependency>
             <groupId>org.drools.fipa</groupId>
             <artifactId>drools-agent-service</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${drools.agent.version}</version>
+            <type>war</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.drools.fipa</groupId>
+            <artifactId>dss-agent-acl</artifactId>
+            <version>${drools.agent.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.drools.fipa</groupId>
+            <artifactId>dss-agent-util</artifactId>
+            <version>${drools.agent.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.drools.fipa</groupId>
+            <artifactId>drools-agent-core</artifactId>
+            <version>${drools.agent.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-informer</artifactId>
-            <version>5.3.0-SNAPSHOT</version>
+            <version>${drools.version}</version>
+            <type>pom</type>
         </dependency>
 
         <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-pmml-compiler</artifactId>
-            <version>5.3.0-SNAPSHOT</version>
+            <version>${drools.pmml.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>3.3.2.GA</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>3.3.2.GA</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>javax.persistence</groupId>
+            <artifactId>persistence-api</artifactId>
+            <version>1.0</version>
         </dependency>
 
 

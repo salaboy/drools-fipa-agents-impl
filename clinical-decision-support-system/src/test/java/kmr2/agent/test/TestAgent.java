@@ -1,11 +1,8 @@
 package kmr2.agent.test;
 
-import org.drools.builder.ResourceType;
 import org.drools.fipa.*;
-import org.drools.fipa.body.acts.AbstractMessageBody;
 import org.drools.fipa.body.acts.Inform;
-import org.drools.fipa.body.acts.InformRef;
-import org.drools.io.impl.UrlResource;
+import org.drools.informer.generator.FormRegistry;
 import org.drools.runtime.rule.Variable;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -34,7 +31,7 @@ public class TestAgent {
         mainConfig.setResponseInformer(mainResponseInformer);
         DroolsAgentConfiguration.SubSessionDescriptor subDescr1 = new DroolsAgentConfiguration.SubSessionDescriptor(
                 "sessionSurvey",
-                "survey_test.xml",
+                "test/survey_test.xml",
                 "NOT_USED_YET" );
         mainConfig.addSubSession(subDescr1);
         mainAgent = DroolsAgentFactory.getInstance().spawn( mainConfig );
@@ -279,128 +276,16 @@ public class TestAgent {
         System.out.println(ans99.getBody());
 
 
-
+        FormRegistry registry = new FormRegistry();
 
         Collection wm2 = mainAgent.getInnerSession("patient33").getObjects();
         System.out.println("*********");
         System.out.println();
 
 
-
     }
 
 
-
-//    @Test
-//    public void testRequest() {
-//
-//        ACLMessageFactory factory = new ACLMessageFactory(ACLMessageFactory.Encodings.XML);
-//
-//        Map<String,Object> args = new LinkedHashMap<String,Object>();
-//        args.put("userId","patient1");
-//        args.put("surveyId","123456UNIQUESURVEYID");
-//
-//
-//
-//        ACLMessage req = factory.newRequestMessage("me","you",new Action("getSurvey", args));
-//
-//
-//
-//        mainAgent.tell(req);
-//
-//        assertNotNull(mainResponseInformer.getResponses(req));
-//        assertEquals(2,mainResponseInformer.getResponses(req).size());
-//
-//        ACLMessage answer = mainResponseInformer.getResponses(req).get(0);
-//        assertEquals(ACLMessage.Act.AGREE,answer.getPerformative());
-//        ACLMessage answer2 = mainResponseInformer.getResponses(req).get(1);
-//        assertEquals(ACLMessage.Act.INFORM,answer2.getPerformative());
-//
-//        assertTrue(answer2.getBody().getEncodedContent().contains("SurveyGUIAdapter"));
-//        System.err.println("GETSURVEY RESPONSE : " + answer2.getBody().getEncodedContent());
-//
-//        mainResponseInformer.getResponses(req).clear();
-//
-//
-//
-//        for (int j = 0; j < 200; j++) {
-//        System.err.println("\n");
-//        System.out.println("\n");
-//        }
-//
-//
-//        ACLMessage req2 = factory.newRequestMessage("me","you",new Action("getSurvey", args));
-//
-//        mainAgent.tell(req);
-//
-//        ACLMessage answer21 = mainResponseInformer.getResponses(req).get(0);
-//        assertEquals(ACLMessage.Act.AGREE,answer21.getPerformative());
-//        ACLMessage answer22 = mainResponseInformer.getResponses(req).get(1);
-//        assertEquals(ACLMessage.Act.INFORM,answer22.getPerformative());
-//
-//        System.err.println("GETSURVEY RESPONSE : " + answer22.getBody().getEncodedContent());
-//
-//
-//
-//
-//
-//
-//    }
-//
-//
-//
-//
-//    @Test
-//    public void testRequestNamedOutputs() {
-//
-//        ACLMessageFactory factory = new ACLMessageFactory(ACLMessageFactory.Encodings.XML);
-//
-//        Map<String,Object> args = new LinkedHashMap<String,Object>();
-//        args.put("userId","patient1");
-//        args.put("surveyId","123456UNIQUESURVEYID");
-//        args.put("?adapter", Variable.v);
-//
-//
-//        ACLMessage req = factory.newRequestMessage("me","you",new Action("getSurvey", args));
-//
-//
-//
-//        mainAgent.tell(req);
-//
-//        assertNotNull(mainResponseInformer.getResponses(req));
-//        assertEquals(2,mainResponseInformer.getResponses(req).size());
-//
-//        ACLMessage answer = mainResponseInformer.getResponses(req).get(0);
-//        assertEquals(ACLMessage.Act.AGREE,answer.getPerformative());
-//        ACLMessage answer2 = mainResponseInformer.getResponses(req).get(1);
-//        assertEquals(ACLMessage.Act.INFORM_REF,answer2.getPerformative());
-//
-//        assertTrue(answer2.getBody().getEncodedContent().contains("SurveyGUIAdapter"));
-//
-//
-//    }
-//
-//
-//
-//
-//    @Test
-//    public void testPredictiveSurveyCreation() {
-//        String sid = "123456";
-//        StatefulKnowledgeSession k2 = mainAgent.getInnerSession("session2");
-//        assertNotNull(k2);
-//
-//        System.err.println("\n\n\n\n\n\n\n\n");
-//        for (Object o : k2.getObjects()) {
-//            System.err.println(o);
-//        }
-//
-//        QueryResults res2 = k2.getQueryResults("getItemId", "Mixed_Questionnaire", "Mixed");
-//        assertEquals(1,res2.size());
-//        String id2 = (String) res2.iterator().next().get("$id");
-//        assertNotNull(id2);
-//        System.out.println(id2);
-//
-//    }
 
 
 }

@@ -23,15 +23,15 @@ then
     System.out.println("Created surveyt" + sb);
 end
 
-
-rule "FinalizeSurvey"
-when
-    $sb : SurveyBean( $id : questionnaireId, finalQuestion == true )
-then
-
-    org.drools.compiler.DroolsDao dao = new org.drools.compiler.DroolsDao();
-        dao.register("org.kmr2.mock.SurveyBean");
-        dao.initEntityManager("org.kmr2.surveys",drools.getWorkingMemory());
-    System.out.println("SAVE " + $sb);
-end
+//
+//rule "FinalizeSurvey"
+//when
+//    $sb : SurveyBean( $id : questionnaireId, finalQuestion == true )
+//then
+//
+//    org.drools.compiler.DroolsDao dao = new org.drools.compiler.DroolsDao();
+//        dao.register("org.kmr2.mock.SurveyBean");
+//        dao.initEntityManager("org.kmr2.surveys",drools.getWorkingMemory());
+//    System.out.println("SAVE " + $sb);
+//end
 
