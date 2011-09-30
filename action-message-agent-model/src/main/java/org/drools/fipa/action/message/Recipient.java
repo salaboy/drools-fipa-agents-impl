@@ -5,6 +5,8 @@
 package org.drools.fipa.action.message;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -15,13 +17,15 @@ public class Recipient implements Serializable {
     private String recipientId;
     private String refId;
     private String externalReference;
-
+    private List<String> channels;
+    
     public Recipient() {
     }
 
     public Recipient(String refId, String id) {
         this.refId = refId;
         this.recipientId = id;
+        this.channels = new ArrayList<String>();
     }
 
     public String getExternalReference() {
@@ -48,10 +52,26 @@ public class Recipient implements Serializable {
         this.refId = refId;
     }
 
+    public List<String> getChannels() {
+        return channels;
+    }
+
+    public void setChannels(List<String> channels) {
+        this.channels = channels;
+    }
+    
+    public void addChannel(String channel){
+        if(this.channels == null){
+            this.channels = new ArrayList<String>();
+        }
+        this.channels.add(channel);
+    }
+
     @Override
     public String toString() {
-        return "Recipient{" + "recipientId=" + recipientId + ", refId=" + refId + ", externalReference=" + externalReference + '}';
+        return "Recipient{" + "recipientId=" + recipientId + ", refId=" + refId + ", externalReference=" + externalReference + ", channels=" + channels + '}';
     }
+
     
     
     

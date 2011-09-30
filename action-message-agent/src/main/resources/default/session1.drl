@@ -2,6 +2,8 @@ package org.drools.test;
 
 import org.drools.fipa.body.content.*;
 import org.drools.fipa.action.message.*;
+import org.drools.fipa.action.message.types.*;
+import org.drools.fipa.action.message.invokers.*;
 import java.util.ArrayList;
 import java.util.List;
 global java.util.Map channels;
@@ -18,15 +20,10 @@ then
     System.out.println("SESSION #1 >>> " + $o);
 end
 
-rule "Insert Available Channels"
-    salience -1
-    when
-    then
-        insert(new Channel("SMS", "http://webservice/sms/invoke"));
-end
 
 
 
+//Resolve Recipients
 rule "Deliver Message Action Found"
     when
         $action: Action(actionName == "deliverMessage",
@@ -36,17 +33,71 @@ rule "Deliver Message Action Found"
                         $mainRecipients : this["mainRecipients"]
                         )
     then
-        System.out.println(" Action RefId >>> " + $refId );    
-        System.out.println(" Action Main Recipients >>> " + $mainRecipients );
+        System.out.println("!!!! Action RefId >>> " + $refId );    
+        System.out.println("!!!! Action Main Recipients >>> " + $mainRecipients );
 
         insert(new Recipient((String)$refId, (String)$mainRecipients));
 end
 
+rule "Retrieve Recipient Information"
+    no-loop
+    when
+        $r: Recipient(channels.size == 0)
+        $c: Channel (type == "IdentityResolverService", $endpoint: endpoint)
+        $invoker: ChannelInvoker(type == "IdentityChannelInvoker" )
+    then
+        System.out.println("!!!! Resolving Identities ");
+        $r = (Recipient)$invoker.invoke($endpoint, $r);
+        update($r);
+        
+        
+end
+
+rule "Construct SMS Body"
+    when
+      $action: Action(actionName == "deliverMessage",
+                        keySet contains "refId",
+                        $refId : this["refId"],
+                        keySet contains "type",
+                        $type : this["type"] == "SMS",
+                        keySet contains "body",
+                        $body : this["body"],
+                        keySet contains "header",
+                        $header : this["header"]    
+                        )
+      not (Message(refId == $refId))                  
+                            
+    then
+       System.out.println("!!!! Inserting Message ");
+       insert(new SMSMessage((String)$refId, (String)$body, (String)$header)); 
+    
+
+end
+
+rule "Construct EMAIL Body"
+    when
+      $action: Action(actionName == "deliverMessage",
+                        keySet contains "refId",
+                        $refId : this["refId"],
+                        keySet contains "type",
+                        $type : this["type"] == "EMAIL",
+                        keySet contains "body",
+                        $body : this["body"],
+                        keySet contains "header",
+                        $header : this["header"]    
+                        )
+      not (Message(refId == $refId))                  
+                            
+    then
+       System.out.println("!!!! Inserting Message ");
+       insert(new EMAILMessage((String)$refId, (String)$body, (String)$header)); 
+    
+
+end
 
 
 
 rule "Invoke Channel"
-    salience 1
     when
         $action: Action(actionName == "deliverMessage",
                         keySet contains "refId",
@@ -55,18 +106,18 @@ rule "Invoke Channel"
                         $conversationId : this["conversationId"],
                         keySet contains "type",
                         $type : this["type"])
-        $channel: Channel(type == $type)
-        $recipients: ArrayList(size > 0) from collect (Recipient(refId == $refId))
-
+        $channel: Channel(type == $type, $endpoint: endpoint)
+        $invoker: ChannelInvoker(type == $type )
+        $recipient: Recipient(refId == $refId)
+        String(this matches "^"+$type+":.*" ) from $recipient.channels
+        $message: Message(refId == $refId)
     then
-        System.out.println(" Invoking channel endpoint >>> " + $channel.getEndpoint());
-        //channels.get($channel.getEndpoint()).invoke(List<Recipient> resolvedRecipients);
-        for(Object rec: $recipients){
-            Recipient recip = (Recipient)rec;
-            System.out.println(" Invoking channel for Recipient >>> " + recip);
-        }
-
+        System.out.println("!!!! Invoking channel endpoint >>> " + $channel.getEndpoint());
+        System.out.println("!!!! Invoking channel for Recipient >>> " + $recipient);
+        $invoker.invoke($endpoint, $message);
         insert(new MessageDeliveredResponse((String)$refId));
+        retract($message);
+        retract($recipient);
 end
 
 
