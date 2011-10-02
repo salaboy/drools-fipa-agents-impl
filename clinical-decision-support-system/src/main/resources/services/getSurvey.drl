@@ -29,7 +29,15 @@ when
     not SurveyTicket( sid == $surveyId )
 then
     insert( new SurveyTicket( (String) $surveyId, (String) $userId, null, false, null) );
-    retract( $a );
+end
+
+
+rule "Action_Request : getSurvey Cleanup"
+salience -10
+when
+    $a : Action( actionName == "getSurvey" )
+then
+    retract($a);
 end
 
 

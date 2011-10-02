@@ -1,21 +1,9 @@
 
-
 import org.drools.fipa.body.content.Action;
-//import org.drools.fipa.MessageContentEncoder;
-//import org.drools.fipa.Encodings;
 
 import org.drools.informer.*;
 import org.drools.informer.xml.ChangeCollector;
 import org.drools.informer.presentation.*;
-
-//import org.drools.io.internal.InternalResource;
-//import java.util.List;
-//import java.util.ArrayList;
-//
-//import org.drools.pmml_4_0.ModelMarker;
-//import org.drools.pmml_4_0.PMML4Field;
-
-
 
 
 
@@ -28,9 +16,9 @@ when
                  $status : this["status"],
                  $patientId : this["patientId"]
                  )
-
 then
-
+    retract( $a );
+    insert( new Answer((String) $status, "status", (String) $actionId ) );
 end
 
 

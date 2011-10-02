@@ -18,46 +18,7 @@ import org.drools.pmml_4_0.ModelMarker;
 import org.drools.pmml_4_0.PMML4Field;
 
 
-
-
-
-
-
-
-
-
-
-
-
-declare GetRiskModelsDetail
-    userId              : String
-    patientId           : String
-    modelIds            : List
-    riskModels          : List
-    successStatus       : boolean       = false
-    statusMessage       : String        = "(ok)"
-end
-
-declare RiskModelDetail
-    modelId             : String
-    position            : int
-    severity            : int
-    title               : String
-    disease             : String
-    relativeRisk        : int
-    relativeRiskRange   : int
-    displayThreshold    : int
-    survey              : SurveyGUIAdapter
-    dxProcessId         : String
-end
-
-
-declare RiskValue
-@format(trait)
-    value   : double
-    context : String
-end
-
+import org.kmr2.decision.*;
 
 
 
@@ -138,15 +99,41 @@ then
 end
 
 
+rule "Threshold"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+    getRiskThreshold( $mid, $value ; )
+then
+    $rmd.setDisplayThreshold( $value );
+end
+
 
 rule "Include Survey"
 when
     $rmd : RiskModelDetail( $mid : modelId )
     $qid : String() from ( $mid+"_Questionnaire" )
            ?getItemId( $qid, $mid, $surveyId ; )
-           getSurvey( $userId, $patientId, $surveyId, $return ; )
+//           getSurvey( $userId, $patientId, $surveyId, $return ; )
 then
-    $rmd.setSurvey( $return );
+    $rmd.setSurveyId( $surveyId );
+end
+
+rule "Include Dx Guide"
+when
+    $rmd : RiskModelDetail( $mid : modelId, $dis : disease )
+    $dxg : DiagnosticGuideProcess( disease == $dis, $id : id, $status : status )
+then
+    $rmd.setDxProcessId( $id );
+    $rmd.setDxProcessStatus( $status );
+end
+
+rule "No Dx Guide"
+when
+    $rmd : RiskModelDetail( $mid : modelId, $dis : disease )
+    not    DiagnosticGuideProcess( disease == $dis )
+then
+    $rmd.setDxProcessId( null );
+    $rmd.setDxProcessStatus( "Not Started" );
 end
 
 

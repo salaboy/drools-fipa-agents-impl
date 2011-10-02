@@ -1,9 +1,12 @@
 package org.kmr2.decision;
 
 import org.drools.pmml_4_0.ModelMarker;
+import org.drools.pmml_4_0.PMML4Field;
+
 import org.drools.fipa.*;
 import org.drools.base.DroolsQuery;
 
+import org.drools.informer.Answer;
 import org.drools.informer.generator.FormRegistry;
 import org.drools.informer.generator.annotations.Questionable;
 import org.drools.informer.generator.annotations.QuestionMark;
@@ -13,8 +16,6 @@ import org.drools.informer.generator.annotations.AllowedAnswers;
 
 declare AskAlcohol extends DxAction
 @Questionable( label = "Ask for Alcohol Abuse", language = "EN" )
-//@Entity(name = "AskAlcholForm")
-//@Table(name = "AskAlcoholFormTable" )
 
     descr           : String            = "Ask for alcohol abuse"
 
@@ -26,8 +27,6 @@ end
 
 declare AskDeployment extends DxAction
 @Questionable( label = "Ask for Number of Deployments", language = "EN" )
-//@Entity(name = "AskAlcholForm")
-//@Table(name = "AskAlcoholFormTable" )
 
     descr           : String            = "Ask for number of deployments "
 
@@ -36,6 +35,38 @@ declare AskDeployment extends DxAction
     @AllowedAnswers( values = { "0=No deployments", "1=Just once", "2+=Two or more times"  } )
 
 end
+
+
+
+
+
+
+
+rule "Execute_AskAlcohol I"
+when
+    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : steps )
+    DxDecision( this memberOf $steps, current == true, $acts : children )
+    AskAlcohol( question == true, this memberOf $acts )
+    ModelMarker( modelName == $dm )
+then
+    System.out.println("Our friend uses ALCOHOL");
+    drools.getWorkingMemory().getWorkingMemoryEntryPoint("in_Alcohol").insert("yes");
+    drools.getWorkingMemory().getWorkingMemoryEntryPoint("in_Deployments").insert("2+");
+end
+
+rule "Execute_AskAlcohol II"
+when
+    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : steps )
+    DxDecision( this memberOf $steps, current == true, $acts : children )
+    AskAlcohol( question == false, this memberOf $acts )
+    ModelMarker( modelName == $dm )
+then
+    System.out.println("Our friend uses ALCOHOL NOT");
+    drools.getWorkingMemory().getWorkingMemoryEntryPoint("in_Alcohol").insert("no");
+    drools.getWorkingMemory().getWorkingMemoryEntryPoint("in_Deployments").insert("0");
+end
+
+
 
 
 
@@ -103,18 +134,18 @@ then
 end
 
 
-//rule "Close step II"
-//salience 15
-//when
-//    $dx     : DiagnosticGuideProcess( $id : id, $steps : steps, $num : steps.size() )
-//    $x      : DxStep( dxProcessId == $id, step > 0, step == $num )
-//    $prev   : DxDecision( this memberOf $steps, current == true, $acts : children )
-//    $act    : DxAction() from $acts
-//then
-////    System.out.println( "Killing orphan " + $act );
-//////    $prev.setCurrent( false );
-////    retract( $act );
-//end
+rule "Close step II"
+salience 15
+when
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : steps, $num : steps.size() )
+    $x      : DxStep( dxProcessId == $id, step > 0, step == $num )
+    $prev   : DxDecision( this memberOf $steps, current == true, $acts : children )
+    $act    : DxAction() from $acts
+then
+    System.out.println( "Killing orphan " + $act );
+//    $prev.setCurrent( false );
+//    retract( $act );
+end
 
 
 
@@ -163,9 +194,9 @@ query getAction( String $formId, DxAction $act )
     $act := DxAction( $formId := questionnaireId )
 end
 
-query getForm( String $surveyId, SurveyGUIAdapter $return )
-    $return := SurveyGUIAdapter( $surveyId := itemId )
-end
+//query getForm( String $surveyId, SurveyGUIAdapter $return )
+//    $return := SurveyGUIAdapter( $surveyId := itemId )
+//end
 
 rule "Initialize action forms"
 salience 9999
@@ -194,14 +225,37 @@ when
               formMarker( $tid, $className, $formId ; )
               getAction( $formId, $act ; )
               ?isUseful( $act, $util ; )
-              getForm( $formId, $form ; )
+//              getForm( $formId, $form ; )
 then
         $act.setUtility( $util );
         $act.setStatus( "Not Started" );
         $act.setUtilityLing( "tbd " );
-        $act.setForm( $form );
-    $childz.add( $act );
+        $childz.add( $act );
 end
+
+
+
+
+rule "Update Diagnosis I"
+when
+    $dx  : DiagnosticGuideProcess( $mid : diagModel )
+    $fld : PMML4Field( context == $mid, name == "Diag" )
+then
+    DiagValue val = don( $fld, DiagValue.class, true );
+end
+
+rule "Update Diagnosis II"
+when
+    $dx     : DiagnosticGuideProcess( $id : id, $mid : diagModel, $steps : steps )
+    $x      : DxStep( dxProcessId == $id, $n : step )
+    $step   : DxDecision( step == $n, this memberOf $steps, current == true )
+              DiagValue( context == $mid, $val : value )
+then
+    System.err.println(" New estimate is " + ((int) Math.round( $val * 100 )) );
+    $step.setDisease( (int) Math.round( $val * 100 ) ) ;
+end
+
+
 
 
 

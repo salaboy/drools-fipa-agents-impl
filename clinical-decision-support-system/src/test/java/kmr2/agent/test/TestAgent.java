@@ -4,11 +4,21 @@ import org.drools.fipa.*;
 import org.drools.fipa.body.acts.Inform;
 import org.drools.informer.generator.FormRegistry;
 import org.drools.runtime.rule.Variable;
+import org.drools.spi.KnowledgeHelper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.w3c.dom.Document;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
 import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class TestAgent {
 
@@ -60,6 +70,22 @@ public class TestAgent {
 
     }
 
+
+
+
+
+    @Test
+    public void testProbe() {
+        ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+            args.put("patientId","surveyPatient");
+
+        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("probe", args));
+                mainAgent.tell(req);
+                ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
+
+        System.out.println(ans.getBody());
+    }
 
     @Test
     public void testSurvey() {
@@ -123,6 +149,7 @@ public class TestAgent {
         args.clear();
         args.put("userId","drx");
         args.put("patientId","patient33");
+        args.put("surveyId",sid);
         args.put("questionId",deployments);
         args.put("answer","1");
         ACLMessage setS2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
@@ -132,6 +159,7 @@ public class TestAgent {
         args.clear();
         args.put("userId","drx");
         args.put("patientId","patient33");
+        args.put("surveyId",sid);
         args.put("questionId",gender);
         args.put("answer","female");
         ACLMessage setS1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
@@ -140,6 +168,7 @@ public class TestAgent {
         args.clear();
         args.put("userId","drx");
         args.put("patientId","patient33");
+        args.put("surveyId",sid);
         args.put("questionId",alcohol);
         args.put("answer","yes");
         ACLMessage setS3 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
@@ -148,12 +177,22 @@ public class TestAgent {
         args.clear();
         args.put("userId","drx");
         args.put("patientId","patient33");
+        args.put("surveyId",sid);
         args.put("questionId",age);
         args.put("answer","30");
         ACLMessage setS4 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
         mainAgent.tell(setS4);
 
 
+
+
+
+        args.clear();
+        args.put("patientId","patient33");
+        args.put("modelId",mid);
+        args.put("threshold","22");
+        ACLMessage setThold = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setRiskThreshold", args) );
+        mainAgent.tell(setThold);
 
 
 
@@ -232,8 +271,84 @@ public class TestAgent {
         System.out.println("***********************************************************************************************************************");
 
 
+        String statusXML = ((Inform) ans2.getBody()).getProposition().getEncodedContent();
+
+        String actionId = statusXML.substring(
+                statusXML.indexOf("<questionnaireId>") + "<questionnaireId>".length(),
+                statusXML.indexOf("</questionnaireId>")
+        );
+
+        System.err.println(actionId);
 
 
+//        args.clear();
+//        args.put("dxProcessId",dxProcessId);
+//        args.put("actionsId",actionId);
+//        args.put("status","Started");
+//        args.put("patientId", "patient33" );
+//
+//        ACLMessage reqAction1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
+//
+//        mainAgent.tell(reqAction1);
+
+        args.clear();
+        args.put("userId","patient33");
+        args.put("patientId","patient33");
+        args.put("surveyId",actionId);
+
+        ACLMessage actQuest = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args));
+        mainAgent.tell(actQuest);
+        ACLMessage ansQuest = mainResponseInformer.getResponses(actQuest).get(1);
+
+        String xml = ((Inform)ansQuest.getBody()).getProposition().getEncodedContent();
+
+
+        String alcoholQid = "";
+        try {
+            Document action = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( new ByteArrayInputStream(xml.getBytes()) );
+            XPath finder = XPathFactory.newInstance().newXPath();
+            String xpath = "//questionName[.='question']/../itemId";
+            alcoholQid = (String) finder.evaluate(xpath, action, XPathConstants.STRING);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail( e.getMessage() );
+        }
+        System.err.println(alcoholQid);
+
+
+        args.clear();
+        args.put("userId","drx");
+        args.put("patientId","patient33");
+        args.put("surveyId",actionId);
+        args.put("questionId",alcoholQid);
+        args.put("answer","true");
+        ACLMessage setAlchol = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
+        mainAgent.tell(setAlchol);
+
+
+
+        args.clear();
+        args.put("userId","patient33");
+        args.put("patientId","patient33");
+        args.put("surveyId",actionId);
+
+        ACLMessage actQuest2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args));
+        mainAgent.tell(actQuest2);
+        ACLMessage ansQuest2 = mainResponseInformer.getResponses(actQuest2).get(1);
+
+        String xml2 = ((Inform)ansQuest2.getBody()).getProposition().getEncodedContent();
+        System.err.println(xml2);
+
+
+//         args.clear();
+//        args.put("dxProcessId",dxProcessId);
+//        args.put("actionsId",actionId);
+//        args.put("status","Complete");
+//        args.put("patientId", "patient33" );
+//
+//        ACLMessage reqAction1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
+//
+//        mainAgent.tell(reqAction1);
 
 
         args.clear();
@@ -245,6 +360,19 @@ public class TestAgent {
         mainAgent.tell(next);
 
         System.out.println("***********************************************************************************************************************");
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -276,11 +404,12 @@ public class TestAgent {
         System.out.println(ans99.getBody());
 
 
-        FormRegistry registry = new FormRegistry();
+
+
 
         Collection wm2 = mainAgent.getInnerSession("patient33").getObjects();
         System.out.println("*********");
-        System.out.println();
+        System.out.println( wm2.size() );
 
 
     }

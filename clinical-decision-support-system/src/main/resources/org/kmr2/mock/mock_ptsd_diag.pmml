@@ -91,7 +91,7 @@
 
 
     <NeuralOutputs>
-      <NeuralOutput outputNeuron="7">
+      <NeuralOutput outputNeuron="6">
         <DerivedField dataType="double" optype="continuous">
           <FieldRef field="diag"/>
         </DerivedField>

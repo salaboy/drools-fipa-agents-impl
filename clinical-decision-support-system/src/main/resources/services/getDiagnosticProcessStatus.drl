@@ -19,6 +19,42 @@ then
 end
 
 
+rule "Update State on complete"
+salience -10
+when
+    $a  : Action( actionName == "getDiagnosticProcessStatus",
+                  $dxProcessId   : this["dxProcessId"] )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Complete" )
+then
+    $dx.setCanAdvance( false );
+end
+
+
+rule "Update State by action I"
+salience -10
+when
+    $a  : Action( actionName == "getDiagnosticProcessStatus",
+                  $dxProcessId   : this["dxProcessId"] )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status != "Complete", $steps : steps )
+          DxDecision( current == true, this memberOf $steps, $acts : children )
+          forall( DxAction( this memberOf $acts, status != "Started" && != "Committed" ) )
+then
+    $dx.setCanAdvance( true );
+end
+
+rule "Update State by action II"
+salience -10
+when
+    $a  : Action( actionName == "getDiagnosticProcessStatus",
+                  $dxProcessId   : this["dxProcessId"] )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status != "Complete", $steps : steps )
+          DxDecision( current == true, this memberOf $steps, $acts : children )
+          exists( DxAction( this memberOf $acts, status == "Started" || == "Committed" ) )
+then
+    $dx.setCanAdvance( true );
+end
+
+
 
 
 query getDiagnosticProcessStatus( String $dxProcessId, boolean $refresh, String $patientId, DiagnosticGuideProcess $return )
