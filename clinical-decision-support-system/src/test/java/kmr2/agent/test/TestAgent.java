@@ -1,8 +1,17 @@
 package kmr2.agent.test;
 
+import org.drools.KnowledgeBase;
+import org.drools.KnowledgeBaseConfiguration;
+import org.drools.KnowledgeBaseFactory;
+import org.drools.builder.KnowledgeBuilder;
+import org.drools.builder.KnowledgeBuilderFactory;
+import org.drools.builder.ResourceType;
+import org.drools.conf.AssertBehaviorOption;
 import org.drools.fipa.*;
 import org.drools.fipa.body.acts.Inform;
 import org.drools.informer.generator.FormRegistry;
+import org.drools.io.ResourceFactory;
+import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.rule.Variable;
 import org.drools.spi.KnowledgeHelper;
 import org.junit.AfterClass;
@@ -340,15 +349,15 @@ public class TestAgent {
         System.err.println(xml2);
 
 
-//         args.clear();
-//        args.put("dxProcessId",dxProcessId);
-//        args.put("actionsId",actionId);
-//        args.put("status","Complete");
-//        args.put("patientId", "patient33" );
-//
-//        ACLMessage reqAction1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
-//
-//        mainAgent.tell(reqAction1);
+        args.clear();
+        args.put("dxProcessId",dxProcessId);
+        args.put("actId",actionId);
+        args.put("status","Complete");
+        args.put("patientId", "patient33" );
+
+        ACLMessage reqAction1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
+
+        mainAgent.tell(reqAction1);
 
 
         args.clear();
@@ -414,6 +423,102 @@ public class TestAgent {
 
     }
 
+
+
+    @Test
+       public void testX() {
+           String s =
+               "package org.drools.test\n" +
+               "import " + Action.class.getCanonicalName() + "\n" +
+               "import " + Answer.class.getCanonicalName() + "\n" +
+               "rule r1 when\n" +
+               "       $a : Action( actionName == \"setDiagnosticActionStatus\", \n" +
+               "                    $processId : this[\"dxProcessId\"], \n" +
+               "                    $actionId : this[\"actionId\"], \n" +
+               "                    $status : this[\"status\"], \n" +
+               "                    $patientId : this[\"patientId\"] )\n" +
+               "then\n" +
+               "    System.out.println('execute');\n" +
+               "    insert( new Answer((String) $status, \"status\", (String) $actionId ) );\n" +
+               "    retract( $a );" +
+               "end\n";
+
+           KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+           kbuilder.add( ResourceFactory.newByteArrayResource(s.getBytes()), ResourceType.DRL );
+
+           if ( kbuilder.hasErrors() ) {
+               fail( kbuilder.getErrors().toString() );
+           }
+
+           KnowledgeBaseConfiguration kconf = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+           kconf.setOption( AssertBehaviorOption.EQUALITY );
+           KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase(kconf);
+
+           kbase.addKnowledgePackages( kbuilder.getKnowledgePackages() );
+
+
+           StatefulKnowledgeSession ksession = kbase.newStatefulKnowledgeSession();
+
+           Action action = new Action();
+           action.setActionName( "setDiagnosticActionStatus" );
+           action.put( "dxProcessId", "v1" );
+           action.put( "actionId", "v2" );
+           action.put( "status", "v3" );
+           action.put( "patientId", "v4" );
+
+           ksession.insert( action );
+           ksession.fireAllRules();
+       }
+
+       public static class Action extends HashMap {
+           private String actionName ;
+
+           public String getActionName() {
+               return actionName;
+           }
+
+           public void setActionName(String actionName) {
+               this.actionName = actionName;
+           }
+       }
+
+       public static class Answer {
+           private String value;
+           private String field;
+           private String id;
+
+           public Answer(String value,
+                         String field,
+                         String id) {
+               this.value = value;
+               this.field = field;
+               this.id = id;
+           }
+
+           public String getValue() {
+               return value;
+           }
+
+           public void setValue(String value) {
+               this.value = value;
+           }
+
+           public String getField() {
+               return field;
+           }
+
+           public void setField(String field) {
+               this.field = field;
+           }
+
+           public String getId() {
+               return id;
+           }
+
+           public void setId(String id) {
+               this.id = id;
+           }
+       }
 
 
 

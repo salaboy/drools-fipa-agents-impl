@@ -12,13 +12,13 @@ rule "Action_Request : setDiagnosticActionStatus"
 when
     $a : Action( actionName == "setDiagnosticActionStatus",
                  $processId : this["dxProcessId"],
-                 $actionId : this["actionId"],
+                 $actionId : this["actId"],
                  $status : this["status"],
                  $patientId : this["patientId"]
                  )
 then
-    retract( $a );
     insert( new Answer((String) $status, "status", (String) $actionId ) );
+    retract( $a );
 end
 
 
