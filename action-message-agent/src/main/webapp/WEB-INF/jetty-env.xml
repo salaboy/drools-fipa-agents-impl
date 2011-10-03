@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configure id="context" class="org.eclipse.jetty.webapp.WebAppContext">
+     <New id="bean/HumanTaskService" class="org.eclipse.jetty.plus.jndi.EnvEntry">
+        <Arg>bean/HumanTaskService</Arg>
+        <Arg>
+            <Call class="org.jbpm.task.HumanTaskServiceFactory" name="createTaskLocalService"/>
+        </Arg>
+        <Arg type="boolean">true</Arg>
+    </New>
+
+</Configure>

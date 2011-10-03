@@ -6,6 +6,8 @@ import org.drools.fipa.action.message.types.*;
 import org.drools.fipa.action.message.invokers.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.jbpm.task.HumanTaskServiceLookup;
+import org.jbpm.task.TaskService;
 global java.util.Map channels;
 
 
@@ -20,7 +22,15 @@ then
     System.out.println("SESSION #1 >>> " + $o);
 end
 
-
+rule "Human Task Test"
+when
+    $o : Object()
+then
+    System.out.println("HT #1 >>> " + $o);
+    TaskService taskService = HumanTaskServiceLookup.getInstance().lookup();
+    System.out.println("I've just get the Task Service = "+taskService);
+    
+end
 
 
 //Resolve Recipients
