@@ -49,7 +49,7 @@ declare DxAction extends Surveyable
 //    @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = "Current status : ", required = true )
 //    @AllowedAnswers( values = { "Not Started=Not Started", "Started=Started", "Committed=Committed", "Complete=Complete" } )
 
-    upDate          : java.util.Date
+    upDate          : String
 
 end
 

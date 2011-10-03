@@ -9,8 +9,9 @@ import org.kmr2.decision.*;
 rule "Action_Request : advanceDiagnosticGuideProcess"
 when
     $a  : Action( actionName == "advanceDiagnosticGuideProcess",
-                 $dxProcessId : this["processId"],
-                 $patientId   : this["patientId "]
+                  $userId      : this["userId"],
+                  $patientId   : this["patientId "],
+                  $dxProcessId : this["dxProcessId"]
                 )
     $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", $steps : stages )
 then
@@ -20,6 +21,6 @@ then
 end
 
 
-query advanceDiagnosticGuideProcess( String $dxProcessId, String $patientId, String $return )
+query advanceDiagnosticGuideProcess( String $userId, String $patientId, String $dxProcessId, String $return )
     $return := DiagnosticGuideProcess( id == $dxProcessId )
 end

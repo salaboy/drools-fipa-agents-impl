@@ -13,53 +13,61 @@ import org.kmr2.decision.*;
 rule "Action_Request : setDiagnosticActionStatus - Complete"
 when
     $a  : Action( actionName == "setDiagnosticActionStatus",
-                  $processId : this["dxProcessId"],
-                  $actionId : this["actionId"],
-                  $status : this["status"] == "Complete",
-                  $patientId : this["patientId"]
+                  $userId       : this["userId"],
+                  $patientId    : this["patientId"],
+                  $processId    : this["dxProcessId"],
+                  $actionId     : this["actionId"],
+                  $status       : this["status"] == "Complete"
                   )
     $dx : DxAction( questionnaireId == $actionId, status == "Started" || == "Committed" )
 then
     $dx.setStatus( (String) $status );
+    $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
 end
 
 rule "Action_Request : setDiagnosticActionStatus - Started"
 when
     $a  : Action( actionName == "setDiagnosticActionStatus",
-                  $processId : this["dxProcessId"],
-                  $actionId : this["actionId"],
-                  $status : this["status"] == "Started",
-                  $patientId : this["patientId"]
+                  $userId       : this["userId"],
+                  $patientId    : this["patientId"],
+                  $processId    : this["dxProcessId"],
+                  $actionId     : this["actionId"],
+                  $status       : this["status"] == "Started"
                   )
     $dx : DxAction( questionnaireId == $actionId, status == "Not Started" )
 then
     $dx.setStatus( (String) $status );
+    $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
 end
 
 rule "Action_Request : setDiagnosticActionStatus - Committed"
 when
     $a  : Action( actionName == "setDiagnosticActionStatus",
-                  $processId : this["dxProcessId"],
-                  $actionId : this["actionId"],
-                  $status : this["status"] == "Committed",
-                  $patientId : this["patientId"]
+                  $userId       : this["userId"],
+                  $patientId    : this["patientId"],
+                  $processId    : this["dxProcessId"],
+                  $actionId     : this["actionId"],
+                  $status       : this["status"] == "Committed"
                   )
     $dx : DxAction( questionnaireId == $actionId, status == "Started" )
 then
     $dx.setStatus( (String) $status );
+    $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
 end
 
 rule "Action_Request : setDiagnosticActionStatus - Not Started"
 when
     $a  : Action( actionName == "setDiagnosticActionStatus",
-                  $processId : this["dxProcessId"],
-                  $actionId : this["actionId"],
-                  $status : this["status"] == "Not Started",
-                  $patientId : this["patientId"]
+                  $userId       : this["userId"],
+                  $patientId    : this["patientId"],
+                  $processId    : this["dxProcessId"],
+                  $actionId     : this["actionId"],
+                  $status       : this["status"] == "Not Started"
                   )
     $dx : DxAction( questionnaireId == $actionId, status == "Started" )
 then
     $dx.setStatus( (String) $status );
+    $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
 end
 
 
@@ -74,6 +82,6 @@ end
 
 
 
-query setDiagnosticActionStatus( String $processId, String $actionId, String $status, String $patientId, String $return )
+query setDiagnosticActionStatus( String $userId, String $patientId, String $processId, String $actionId, String $status, String $return )
     DxAction( questionnaireId == $actionId, $return := status )
 end

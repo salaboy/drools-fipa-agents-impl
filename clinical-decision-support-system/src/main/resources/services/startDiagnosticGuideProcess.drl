@@ -15,10 +15,10 @@ import org.drools.pmml_4_0.ModelMarker;
 rule "Action_Request : startDiagnosticGuideProcess"
 when
     $a : Action( actionName == "startDiagnosticGuideProcess",
-                 $provId      : this["providerId"],
+                 $provId      : this["userId"],
+                 $patientId   : this["patientId "],
                  $decModelId  : this["decModelId"],
-                 $diagModelId : this["diagModelId"],
-                 $patientId   : this["patientId "]
+                 $diagModelId : this["diagModelId"]
                 )
     not  DiagnosticGuideProcess( decModel == $decModelId, diagModel == $diagModelId, status != "Complete" )
 then
@@ -60,6 +60,6 @@ end
 
 
 
-query startDiagnosticGuideProcess( String $providerId, String $decModelId, String $diagModelId, String $patientId, String $return )
+query startDiagnosticGuideProcess( String $userId, String $patientId, String $decModelId, String $diagModelId, String $return )
     DiagnosticGuideProcess( decModel == $decModelId, diagModel == $diagModelId, $return := id )
 end

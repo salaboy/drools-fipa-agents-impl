@@ -10,9 +10,10 @@ import org.kmr2.decision.*;
 rule "Action_Request : getDiagnosticProcessStatus"
 when
     $a : Action( actionName == "getDiagnosticProcessStatus",
+                 $userId      : this["userId"],
+                 $patientId   : this["patientId"],
                  $processId   : this["dxProcessId"],
-                 $refresh     : this["refresh"],
-                 $patientId   : this["patientId"]
+                 $refresh     : this["refresh"]
                 )
 then
     System.out.println(" GET STATUS for " + $processId );
@@ -61,6 +62,6 @@ end
 
 
 
-query getDiagnosticProcessStatus( String $dxProcessId, boolean $refresh, String $patientId, DiagnosticGuideProcess $return )
+query getDiagnosticProcessStatus( String $userId, String $patientId, String $dxProcessId, boolean $refresh, DiagnosticGuideProcess $return )
     $return := DiagnosticGuideProcess( id == $dxProcessId )
 end

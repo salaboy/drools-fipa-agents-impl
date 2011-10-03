@@ -22,9 +22,10 @@ end
 rule "Action_Request : setRiskThreshold"
 when
     $a : Action( actionName == "setRiskThreshold",
+                 $userId    : this["userId"],
                  $patientId : this["patientId"],
-                 $modelId : this["modelId"],
-                 $value : this["threshold"]
+                 $modelId   : this["modelId"],
+                 $value     : this["threshold"]
                )
     $h : RiskThreshold( $modelId, $prevThold ; )
 then
@@ -36,9 +37,10 @@ end
 rule "Action_Request : setRiskThreshold II"
 when
     $a : Action( actionName == "setRiskThreshold",
+                 $userId    : this["userId"],
                  $patientId : this["patientId"],
-                 $modelId : this["modelId"],
-                 $value : this["threshold"]
+                 $modelId   : this["modelId"],
+                 $value     : this["threshold"]
                )
     not  RiskThreshold( $modelId, $prevThold ; )
 then
@@ -67,6 +69,6 @@ then
 end
 
 
-query setRiskThreshold( String $patientId, String $modelId, String $threshold, int $return )
+query setRiskThreshold( String $userId, String $patientId, String $modelId, String $threshold, int $return )
     RiskThreshold( $modelId, $return ; )
 end

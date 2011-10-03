@@ -27,7 +27,7 @@ when
     $a :  Action( actionName == "getRiskModelsDetail",
                   $userId    : this["userId"],
                   $patientId : this["patientId"],
-                  $modelIds : this["modelIds"]
+                  $modelIds  : this["modelIds"]
                 )
     not   GetRiskModelsDetail()
 then
@@ -46,7 +46,7 @@ when
     $a :  Action( actionName == "getRiskModelsDetail",
                   $userId    : this["userId"],
                   $patientId : this["patientId"],
-                  $modelIds : this["modelIds"]
+                  $modelIds  : this["modelIds"]
                 )
     $id : String() from $modelIds
     not   ModelMarker( modelName == $id )

@@ -9,9 +9,10 @@ import org.kmr2.decision.*;
 rule "Action_Request : completeDiagnosticGuideProcess - Complete"
 when
     $a  : Action( actionName == "completeDiagnosticGuideProcess",
-                 $dxProcessId : this["processId"],
-                 $status      : this["status"] == "Complete",
-                 $patientId   : this["patientId "]
+                  $userId      : this["userId"],
+                  $patientId   : this["patientId "],
+                  $dxProcessId : this["dxProcessId"],
+                  $status      : this["status"] == "Complete"
                 )
     $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started" )
 then
@@ -23,9 +24,10 @@ end
 rule "Action_Request : completeDiagnosticGuideProcess - Cancel"
 when
     $a  : Action( actionName == "completeDiagnosticGuideProcess",
-                 $dxProcessId : this["processId"],
-                 $status      : this["status"] == "Cancel",
-                 $patientId   : this["patientId "]
+                  $userId      : this["userId"],
+                  $patientId   : this["patientId "],
+                  $dxProcessId : this["dxProcessId"],
+                  $status      : this["status"] == "Cancel"
                 )
     $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started" )
 then
@@ -33,6 +35,6 @@ then
     retract( $a );
 end
 
-query completeDiagnosticGuideProcess( String $processId, String $status, String $patientId, String $return )
+query completeDiagnosticGuideProcess( String $userId, String $patientId, String $dxProcessId, String $status, String $return )
     $return := String() from "ok"
 end
