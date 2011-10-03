@@ -12,7 +12,7 @@ when
                  $dxProcessId : this["processId"],
                  $patientId   : this["patientId "]
                 )
-    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", $steps : steps )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", $steps : stages )
 then
     System.out.println( "Stepping to " + ($steps.size()) );
     insert( new DxStep( $dx.getId(), ($steps.size()) ) );

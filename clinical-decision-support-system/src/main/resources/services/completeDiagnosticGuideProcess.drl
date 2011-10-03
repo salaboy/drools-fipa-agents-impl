@@ -16,13 +16,14 @@ when
     $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started" )
 then
     $dx.setStatus( "Complete" );
+    update($dx);
     retract( $a );
 end
 
 rule "Action_Request : completeDiagnosticGuideProcess - Cancel"
 when
     $a  : Action( actionName == "completeDiagnosticGuideProcess",
-                 $dxProcessId : this["providerId"],
+                 $dxProcessId : this["processId"],
                  $status      : this["status"] == "Cancel",
                  $patientId   : this["patientId "]
                 )

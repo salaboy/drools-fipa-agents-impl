@@ -15,43 +15,47 @@ when
                  $patientId   : this["patientId"]
                 )
 then
+    System.out.println(" GET STATUS for " + $processId );
     retract( $a );
 end
 
 
 rule "Update State on complete"
-salience -10
+salience 10
 when
     $a  : Action( actionName == "getDiagnosticProcessStatus",
                   $dxProcessId   : this["dxProcessId"] )
-    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Complete" )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Complete" || == "Cancel" )
 then
+    System.out.println("Process complete/cancelled, no advance");
     $dx.setCanAdvance( false );
 end
 
 
 rule "Update State by action I"
-salience -10
+salience 10
 when
     $a  : Action( actionName == "getDiagnosticProcessStatus",
                   $dxProcessId   : this["dxProcessId"] )
-    $dx : DiagnosticGuideProcess( id == $dxProcessId, status != "Complete", $steps : steps )
-          DxDecision( current == true, this memberOf $steps, $acts : children )
-          forall( DxAction( this memberOf $acts, status != "Started" && != "Committed" ) )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status != "Complete" && != "Cancel", $steps : stages )
+          DxDecision( current == true, this memberOf $steps, $acts : actions )
+          not DxAction( this memberOf $acts, status == "Started" || == "Committed" )
 then
+    System.out.println("Here we advance");
     $dx.setCanAdvance( true );
 end
 
 rule "Update State by action II"
-salience -10
+salience 10
 when
     $a  : Action( actionName == "getDiagnosticProcessStatus",
                   $dxProcessId   : this["dxProcessId"] )
-    $dx : DiagnosticGuideProcess( id == $dxProcessId, status != "Complete", $steps : steps )
-          DxDecision( current == true, this memberOf $steps, $acts : children )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status != "Complete" && != "Cancel", $steps : stages )
+          DxDecision( current == true, this memberOf $steps, $acts : actions )
           exists( DxAction( this memberOf $acts, status == "Started" || == "Committed" ) )
 then
-    $dx.setCanAdvance( true );
+    System.out.println("Pending action, no advance");
+    $dx.setCanAdvance( false );
 end
 
 

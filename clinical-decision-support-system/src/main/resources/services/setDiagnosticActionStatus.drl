@@ -5,25 +5,75 @@ import org.drools.informer.*;
 import org.drools.informer.xml.ChangeCollector;
 import org.drools.informer.presentation.*;
 
+import org.kmr2.decision.*;
 
+
+
+
+rule "Action_Request : setDiagnosticActionStatus - Complete"
+when
+    $a  : Action( actionName == "setDiagnosticActionStatus",
+                  $processId : this["dxProcessId"],
+                  $actionId : this["actionId"],
+                  $status : this["status"] == "Complete",
+                  $patientId : this["patientId"]
+                  )
+    $dx : DxAction( questionnaireId == $actionId, status == "Started" || == "Committed" )
+then
+    $dx.setStatus( (String) $status );
+end
+
+rule "Action_Request : setDiagnosticActionStatus - Started"
+when
+    $a  : Action( actionName == "setDiagnosticActionStatus",
+                  $processId : this["dxProcessId"],
+                  $actionId : this["actionId"],
+                  $status : this["status"] == "Started",
+                  $patientId : this["patientId"]
+                  )
+    $dx : DxAction( questionnaireId == $actionId, status == "Not Started" )
+then
+    $dx.setStatus( (String) $status );
+end
+
+rule "Action_Request : setDiagnosticActionStatus - Committed"
+when
+    $a  : Action( actionName == "setDiagnosticActionStatus",
+                  $processId : this["dxProcessId"],
+                  $actionId : this["actionId"],
+                  $status : this["status"] == "Committed",
+                  $patientId : this["patientId"]
+                  )
+    $dx : DxAction( questionnaireId == $actionId, status == "Started" )
+then
+    $dx.setStatus( (String) $status );
+end
+
+rule "Action_Request : setDiagnosticActionStatus - Not Started"
+when
+    $a  : Action( actionName == "setDiagnosticActionStatus",
+                  $processId : this["dxProcessId"],
+                  $actionId : this["actionId"],
+                  $status : this["status"] == "Not Started",
+                  $patientId : this["patientId"]
+                  )
+    $dx : DxAction( questionnaireId == $actionId, status == "Started" )
+then
+    $dx.setStatus( (String) $status );
+end
 
 
 rule "Action_Request : setDiagnosticActionStatus"
+salience -100
 when
-    $a : Action( actionName == "setDiagnosticActionStatus",
-                 $processId : this["dxProcessId"],
-                 $actionId : this["actId"],
-                 $status : this["status"],
-                 $patientId : this["patientId"]
-                 )
+    $a  : Action( actionName == "setDiagnosticActionStatus" )
 then
-    insert( new Answer((String) $status, "status", (String) $actionId ) );
+    System.out.println("Clearing setDxAction");
     retract( $a );
 end
 
 
 
-
 query setDiagnosticActionStatus( String $processId, String $actionId, String $status, String $patientId, String $return )
-    $return := String() from "ok"
+    DxAction( questionnaireId == $actionId, $return := status )
 end

@@ -7,10 +7,14 @@ import org.drools.fipa.*;
 import org.drools.base.DroolsQuery;
 
 import org.drools.informer.Answer;
+import org.drools.informer.Questionnaire;
+
 import org.drools.informer.generator.FormRegistry;
 import org.drools.informer.generator.annotations.Questionable;
 import org.drools.informer.generator.annotations.QuestionMark;
 import org.drools.informer.generator.annotations.AllowedAnswers;
+
+
 
 
 
@@ -19,8 +23,9 @@ declare AskAlcohol extends DxAction
 
     descr           : String            = "Ask for alcohol abuse"
 
-    question : boolean
-    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Do you abuse alcohol ? ", required = true )
+    question        : String            = "unknown"
+    @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = " Do you abuse alcohol ? ", required = false )
+    @AllowedAnswers( values = { "true=true", "false=false", "unknown=unknown"  } )
 
 end
 
@@ -30,7 +35,7 @@ declare AskDeployment extends DxAction
 
     descr           : String            = "Ask for number of deployments "
 
-    question : String
+    deploys         : String
     @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = " How many times have you been deployed ? ", required = true )
     @AllowedAnswers( values = { "0=No deployments", "1=Just once", "2+=Two or more times"  } )
 
@@ -44,9 +49,9 @@ end
 
 rule "Execute_AskAlcohol I"
 when
-    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : steps )
-    DxDecision( this memberOf $steps, current == true, $acts : children )
-    AskAlcohol( question == true, this memberOf $acts )
+    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : stages, status != "Complete" )
+    DxDecision( this memberOf $steps, current == true, $acts : actions )
+    AskAlcohol( question == "true", this memberOf $acts )
     ModelMarker( modelName == $dm )
 then
     System.out.println("Our friend uses ALCOHOL");
@@ -56,9 +61,9 @@ end
 
 rule "Execute_AskAlcohol II"
 when
-    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : steps )
-    DxDecision( this memberOf $steps, current == true, $acts : children )
-    AskAlcohol( question == false, this memberOf $acts )
+    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : stages, status != "Complete" )
+    DxDecision( this memberOf $steps, current == true, $acts : actions )
+    AskAlcohol( question == "false", this memberOf $acts )
     ModelMarker( modelName == $dm )
 then
     System.out.println("Our friend uses ALCOHOL NOT");
@@ -66,6 +71,18 @@ then
     drools.getWorkingMemory().getWorkingMemoryEntryPoint("in_Deployments").insert("0");
 end
 
+
+rule "AskAlcohol Frame axiom"
+when
+    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : stages, status != "Complete" )
+    DxDecision( $step : stage, this memberOf $steps, current == true, $acts : actions )
+    DxDecision( stage == ($step - 1), current == false, $prevs : actions ) from $steps
+    $curr : AskAlcohol( $q : question, this memberOf $acts )
+    $prev : AskAlcohol( $old : question != $q ) from $prevs
+then
+    $curr.setQuestion( $old );
+    update( $curr );
+end
 
 
 
@@ -88,22 +105,23 @@ rule "Add AskAlcohol"
 salience 100
 no-loop
 when
-    $dx  : DiagnosticGuideProcess( decModel == "MockDecision", $acts : actions not contains AskAlcohol )
+    $dx  : DiagnosticGuideProcess( decModel == "MockDecision", $acts : actions not contains AskAlcohol, status != "Complete" )
 then
+    System.out.println( " Linking' Ask Alcohol action " );
     $acts.add( AskAlcohol.class );
     FormRegistry.register( AskAlcohol.class );
 end
 
 
-//rule "Add AskDeployment"
-//salience 100
-//no-loop
-//when
-//    $dx  : DiagnosticGuideProcess( decModel == "MockDecision", $acts : actions not contains AskDeployment )
-//then
-//    $acts.add( AskDeployment.class );
-//    FormRegistry.register( AskDeployment.class );
-//end
+rule "Add AskDeployment"
+salience 100
+no-loop
+when
+    $dx  : DiagnosticGuideProcess( decModel == "MockDecision", $acts : actions not contains AskDeployment, status != "Complete" )
+then
+    $acts.add( AskDeployment.class );
+    FormRegistry.register( AskDeployment.class );
+end
 
 
 
@@ -124,12 +142,12 @@ end
 rule "Close step"
 salience 10
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $steps : steps, $num : steps.size() )
-    $x      : DxStep( dxProcessId == $id, step > 0, step == $num )
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, $num : stages.size(), status != "Complete" )
+    $x      : DxStep( dxProcessId == $id, stage > 0, stage == $num )
     $prev   : DxDecision( this memberOf $steps, current == true )
 then
     System.out.println( "Closing " + $prev );
-//    $prev.setCurrent( false );
+    $prev.setCurrent( false );
     retract( $prev );
 end
 
@@ -137,14 +155,13 @@ end
 rule "Close step II"
 salience 15
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $steps : steps, $num : steps.size() )
-    $x      : DxStep( dxProcessId == $id, step > 0, step == $num )
-    $prev   : DxDecision( this memberOf $steps, current == true, $acts : children )
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, $num : stages.size(), status != "Complete" )
+    $x      : DxStep( dxProcessId == $id, stage > 0, stage == $num )
+    $prev   : DxDecision( this memberOf $steps, current == true, $acts : actions )
     $act    : DxAction() from $acts
 then
     System.out.println( "Killing orphan " + $act );
-//    $prev.setCurrent( false );
-//    retract( $act );
+    retract( $act );
 end
 
 
@@ -158,14 +175,15 @@ end
 rule "Create step"
 no-loop
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $steps : steps, $num : steps.size() )
-    $x      : DxStep( dxProcessId == $id, step == $num )
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, $num : stages.size(), status != "Complete" )
+    $x      : DxStep( dxProcessId == $id, stage == $num )
 then
-    System.out.println( "Creating new step " + $steps.size() );
+    System.out.println( "Create step " );
     DxDecision step = new DxDecision( java.util.UUID.randomUUID().toString() );
-        step.setStep( $steps.size() );
+        step.setStage( $steps.size() );
         step.setCurrent( true );
-        step.setChildren( new java.util.ArrayList() );
+        step.setDescr( "Stage " + step.getStage() );
+        step.setActions( new java.util.ArrayList() );
     $steps.add( step );
     update( $dx );
     insertLogical( step );
@@ -190,9 +208,9 @@ query ticket( String $className, String $formId, InteractionTicket $ticket )
     $ticket := InteractionTicket( id == $formId )
 end
 
-query getAction( String $formId, DxAction $act )
-    $act := DxAction( $formId := questionnaireId )
-end
+//query getAction( String $formId, DxAction $act )
+//    $act := DxAction( $formId := questionnaireId )
+//end
 
 //query getForm( String $surveyId, SurveyGUIAdapter $return )
 //    $return := SurveyGUIAdapter( $surveyId := itemId )
@@ -216,43 +234,130 @@ end
 rule "Clone Actions"
 no-loop
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $acts : actions, actions.size() > 0, $steps : steps )
-    $x      : DxStep( dxProcessId == $id, $n : step )
-    $step   : DxDecision( step == $n, this memberOf $steps, $childz : children, current == true )
-              Class( $className : name ) from $acts
+    $dx     : DiagnosticGuideProcess( $id : id, $acts : actions, actions.size() > 0, $steps : stages )
+    $x      : DxStep( dxProcessId == $id, $n : stage )
+    $step   : DxDecision( stage == $n, this memberOf $steps, $childz : actions, current == true )
+    $class  : Class( $className : name ) from $acts
+              not DxAction( this memberOf $childz, class == $class )
     $tid    : String() from java.util.UUID.randomUUID().toString()
               ticket( $className, $tid, $ticket ; )
               formMarker( $tid, $className, $formId ; )
-              getAction( $formId, $act ; )
+              //getAction( $formId, $act ; )
+              $act : DxAction( questionnaireId == $formId, utility < 0.0 )
+//              not DxAction( this memberOf $childz, class == $act.class )
               ?isUseful( $act, $util ; )
 //              getForm( $formId, $form ; )
 then
+    System.out.println( "Configuring action ");
         $act.setUtility( $util );
         $act.setStatus( "Not Started" );
-        $act.setUtilityLing( "tbd " );
         $childz.add( $act );
+        update( $step );
+        update( $act );
 end
+
+
+
+rule "Synch IDs"
+when
+    $act : DxAction( $qid : questionnaireId )
+    Questionnaire( id == $qid, $nq : availableItems.size() )
+then
+    System.out.println( "Set action n. questions" );
+    $act.setNumQuestions( $nq );
+end
+
 
 
 
 
 rule "Update Diagnosis I"
 when
-    $dx  : DiagnosticGuideProcess( $mid : diagModel )
+    $dx  : DiagnosticGuideProcess( $mid : diagModel, status != "Complete" )
     $fld : PMML4Field( context == $mid, name == "Diag" )
 then
-    DiagValue val = don( $fld, DiagValue.class, true );
+    System.out.println( "Model diag " + $fld );
+    DiagValue val = don( $fld, DiagValue.class, false );
 end
 
 rule "Update Diagnosis II"
+no-loop
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $mid : diagModel, $steps : steps )
-    $x      : DxStep( dxProcessId == $id, $n : step )
-    $step   : DxDecision( step == $n, this memberOf $steps, current == true )
+    $dx     : DiagnosticGuideProcess( $id : id, $mid : diagModel, $steps : stages, status != "Complete" )
+    $x      : DxStep( dxProcessId == $id, $n : stage )
+    $step   : DxDecision( stage == $n, this memberOf $steps, current == true, $curr : diseaseProbability )
               DiagValue( context == $mid, $val : value )
 then
-    System.err.println(" New estimate is " + ((int) Math.round( $val * 100 )) );
-    $step.setDisease( (int) Math.round( $val * 100 ) ) ;
+    int p = + (int) Math.round( $val * 100 );
+    System.err.println(" New estimate is " + p );
+    $step.setDiseaseProbability( p ) ;
+    update( $step );
+end
+
+
+rule "Update Severity : Low"
+when
+    $dx : DxDecision( $curr : diseaseProbability <= 25)
+then
+    $dx.setSeverity( "Low" );
+    $dx.setResponse( "The estimated disease probability is Low (" + $curr + ")" );
+end
+
+rule "Update Severity : Average"
+when
+    $dx : DxDecision( $curr : diseaseProbability > 25 && <= 50 )
+then
+    $dx.setSeverity( "Average" );
+    $dx.setResponse( "The estimated disease probability is Average (" + $curr + ")" );
+end
+
+rule "Update Severity : High"
+when
+    $dx : DxDecision( $curr : diseaseProbability > 50 && <= 75)
+then
+    $dx.setSeverity( "High" );
+    $dx.setResponse( "The estimated disease probability is High (" + $curr + ")" );
+end
+
+rule "Update Severity : Very High"
+when
+    $dx : DxDecision( $curr : diseaseProbability > 75)
+then
+    $dx.setSeverity( "Very High" );
+    $dx.setResponse( "The estimated disease probability is Very High (" + $curr + ")" );
+end
+
+
+
+
+
+
+
+
+
+rule "Update Utility : Low"
+when
+    $dx : DxAction( $curr : utility <= 0.25)
+then
+    $dx.setUtilityLevel( "Low" );
+end
+
+rule "Update Utility : Normal"
+when
+    $dx : DxAction( $curr : utility > 0.25  )
+then
+    $dx.setUtilityLevel( "Normal" );
+end
+
+
+rule "Find most useful"
+salience -100
+when
+    $step   : DxDecision( current == true, $acts : actions )
+    $dx     : DxAction( this memberOf $acts, $u : utility )
+              not DxAction( this != $dx, this memberOf $acts, utility > $u )
+then
+    $dx.setUtilityLevel( "Suggested" );
 end
 
 

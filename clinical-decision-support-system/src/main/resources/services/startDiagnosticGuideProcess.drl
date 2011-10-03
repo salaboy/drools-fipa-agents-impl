@@ -27,7 +27,7 @@ then
         dx.setStatus( "Started" );
         dx.setDecModel( (String) $decModelId );
         dx.setDiagModel( (String) $diagModelId );
-        dx.setSteps( new java.util.LinkedList() );
+        dx.setStages( new java.util.LinkedList() );
         dx.setActions( new java.util.HashSet() );
     insert( dx );
     retract( $a );

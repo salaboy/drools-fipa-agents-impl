@@ -267,7 +267,7 @@ public class TestAgent {
 
 
         args.clear();
-        args.put("processId",dxProcessId);
+        args.put("dxProcessId",dxProcessId);
         args.put("refresh",true);
         args.put("patientId", "patient33" );
 
@@ -282,23 +282,31 @@ public class TestAgent {
 
         String statusXML = ((Inform) ans2.getBody()).getProposition().getEncodedContent();
 
-        String actionId = statusXML.substring(
-                statusXML.indexOf("<questionnaireId>") + "<questionnaireId>".length(),
-                statusXML.indexOf("</questionnaireId>")
-        );
-
+        String actionId = "";
+        try {
+            Document action = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( new ByteArrayInputStream(statusXML.getBytes()) );
+            XPath finder = XPathFactory.newInstance().newXPath();
+            String xpath = "//org.kmr2.decision.AskAlcohol/questionnaireId";
+            actionId = (String) finder.evaluate(xpath, action, XPathConstants.STRING);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail( e.getMessage() );
+        }
         System.err.println(actionId);
 
 
-//        args.clear();
-//        args.put("dxProcessId",dxProcessId);
-//        args.put("actionsId",actionId);
-//        args.put("status","Started");
-//        args.put("patientId", "patient33" );
-//
-//        ACLMessage reqAction1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
-//
-//        mainAgent.tell(reqAction1);
+        args.clear();
+        args.put("dxProcessId",dxProcessId);
+        args.put("actionId",actionId);
+        args.put("status","Started");
+        args.put("patientId", "patient33" );
+
+        ACLMessage reqAction1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
+        mainAgent.tell(reqAction1);
+
+
+
+
 
         args.clear();
         args.put("userId","patient33");
@@ -351,13 +359,13 @@ public class TestAgent {
 
         args.clear();
         args.put("dxProcessId",dxProcessId);
-        args.put("actId",actionId);
+        args.put("actionId",actionId);
         args.put("status","Complete");
         args.put("patientId", "patient33" );
 
-        ACLMessage reqAction1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
+        ACLMessage reqAction2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
 
-        mainAgent.tell(reqAction1);
+        mainAgent.tell(reqAction2);
 
 
         args.clear();
@@ -369,15 +377,6 @@ public class TestAgent {
         mainAgent.tell(next);
 
         System.out.println("***********************************************************************************************************************");
-
-
-
-
-
-
-
-
-
 
 
 
@@ -402,7 +401,7 @@ public class TestAgent {
         System.out.println("***********************************************************************************************************************");
 
         args.clear();
-        args.put("processId",dxProcessId);
+        args.put("dxProcessId",dxProcessId);
         args.put("refresh",true);
         args.put("patientId", "patient33" );
 
