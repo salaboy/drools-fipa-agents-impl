@@ -4,6 +4,11 @@ package org.drools.test;
 import org.drools.fipa.body.content.Action;
 import org.kmr2.decision.*;
 
+import org.drools.io.internal.InternalResource;
+import java.util.List;
+import java.util.ArrayList;
+
+import org.drools.pmml_4_0.ModelMarker;
 
 
 
@@ -31,23 +36,24 @@ then
 end
 
 
-//rule "Load Diagnostic Model"
-//when
-//    DiagnosticGuideProcess( status == "Started", $dxModel : diagModel );
-//    not   ModelMarker( modelName == $dxModel )
-//    $rs : InternalResource( name == $dxModel )
-//then
-//    manager.addResource( $dxModel, $rs );
-//end
+rule "Load Diagnostic Model"
+when
+    DiagnosticGuideProcess( status == "Started", $dxModel : diagModel );
+    not   ModelMarker( modelName == $dxModel )
+    $rs : InternalResource( name == $dxModel )
+then
+    manager.addResource( $dxModel, $rs );
+end
 
 rule "Load Decision Model"
 when
-    DiagnosticGuideProcess( status == "Started", $decModel : decModel );
+    $dx : DiagnosticGuideProcess( status == "Started", $decModel : decModel );
     not   ModelMarker( modelName == $decModel )
-    $rs : InternalResource( name == $decModel )
+    $rs : InternalResource( name == $decModel, $disease : description )
 then
     System.out.println(" LOADING DECISION ");
     manager.addResource( $decModel, $rs );
+    $dx.setDisease( $disease );
 end
 
 

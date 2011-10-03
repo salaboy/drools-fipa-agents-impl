@@ -1,19 +1,11 @@
 
-
 import org.drools.fipa.body.content.Action;
-//import org.drools.fipa.MessageContentEncoder;
-//import org.drools.fipa.Encodings;
 
 import org.drools.informer.*;
 import org.drools.informer.xml.ChangeCollector;
 import org.drools.informer.presentation.*;
 
-//import org.drools.io.internal.InternalResource;
-//import java.util.List;
-//import java.util.ArrayList;
-//
-//import org.drools.pmml_4_0.ModelMarker;
-//import org.drools.pmml_4_0.PMML4Field;
+import org.drools.base.DroolsQuery;
 
 
 
@@ -25,11 +17,13 @@ when
     $a : Action( actionName == "setSurvey",
                  $userId : this["userId"],
                  $patientId : this["patientId"],
+                 $surveyId : this["surveyId"],
                  $questionId : this["questionId"],
                  $value : this["answer"]
                  )
 
 then
+    retract($a);
     Answer ans = new Answer((String) $questionId, (String) $value);
     System.err.println( ">>>>>>>>>>>>>>>>>>>>>>>>>>> " + ans );
     insert( ans );
@@ -44,6 +38,31 @@ then
     insert( new ChangeCollector() );
 end
 
-query setSurvey( String $userId, String $pid, String $questionId, String $value, ChangeGUIAdapter $return   )
-    $return := ChangeGUIAdapter( $sid := itemId  )
+
+rule "Debug 1"
+when
+    $cx : ChangeGUIAdapter()
+then
+    System.out.println(" WARNING CGUI " + $cx );
+end
+
+rule "Debug"
+when
+    $cx : DroolsQuery( name == "setSurvey" )
+then
+    System.out.println(" WARNING QERY " + $cx );
+end
+
+rule "Debug 3"
+when
+    DroolsQuery( name == "setSurvey" )
+    $cx : ChangeGUIAdapter()
+then
+    System.out.println(" WARNING CGUI " + $cx );
+end
+
+
+
+query setSurvey( String $userId, String $pid, String $surveyId, String $questionId, String $value, ChangeGUIAdapter $return   )
+    $return := ChangeGUIAdapter( itemId == $surveyId )
 end

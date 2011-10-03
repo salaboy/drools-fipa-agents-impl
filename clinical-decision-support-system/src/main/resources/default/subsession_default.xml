@@ -15,39 +15,50 @@
   -->
 
 <change-set xmlns='http://drools.org/drools-5.0/change-set' xmlns:xs='http://www.w3.org/2001/XMLSchema-instance'
-  xs:schemaLocation='http://drools.org/drools-5.0/change-set http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-api/src/main/resources/change-set-1.0.0.xsd'>
-	<add>
+            xs:schemaLocation='http://drools.org/drools-5.0/change-set http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-api/src/main/resources/change-set-1.0.0.xsd'>
+    <add>
 
-    <resource type="DRL" source="classpath:org/drools/fipa/fipa_common.drl" />
-    <resource type="CHANGE_SET" source="classpath:org/drools/informer/informer-changeset.xml" />
-
-
-    <!--<resource type="DRL" source="classpath:declares/interaction_declares.drl" />-->
-    <resource type="DRL" source="classpath:default/interaction.drl" />
+        <resource type="DRL" source="classpath:org/drools/fipa/fipa_common.drl" />
+        <resource type="CHANGE_SET" source="classpath:org/drools/informer/informer-changeset.xml" />
 
 
-    <resource type="CHANGE_SET" source="classpath:test/risk_model_list.xml" />
-    <resource type="CHANGE_SET" source="classpath:test/diag_model_list.xml" />
-
-    <resource type="DRL" source="classpath:services/getSurvey.drl" />
-    <resource type="DRL" source="classpath:services/setSurvey.drl" />
-    <resource type="DRL" source="classpath:services/getRiskModelsDetail.drl" />
+        <!--<resource type="DRL" source="classpath:declares/interaction_declares.drl" />-->
+        <resource type="DRL" source="classpath:default/interaction.drl" />
 
 
-    <resource type="DRL" source="classpath:declares/dxGuide_declares.drl" />
+
+        <resource type="DRL" source="classpath:declares/risk_declares.drl" />
+        <resource type="DRL" source="classpath:declares/dxGuide_declares.drl" />
         <!--  TODO: fix? issue in KnowledgeAgent to load this dynamically -->
-    <resource type="DRL" source="classpath:org/kmr2/mock/mock_ptsd_decision.drl" name="MockDecision" description="Post Traumatic Stress Disorder Decision" />
+        <resource type="DRL" source="classpath:org/kmr2/mock/mock_ptsd_decision.drl" name="MockDecision" description="Post Traumatic Stress Disorder" />
 
 
 
-    <resource type="DRL" source="classpath:services/startDiagnosticGuideProcess.drl" />
-    <resource type="DRL" source="classpath:services/advanceDiagnosticGuideProcess.drl" />
-    <resource type="DRL" source="classpath:services/setDiagnosticActionStatus.drl" />
-    <resource type="DRL" source="classpath:services/completeDiagnosticGuideProcess.drl" />
-    <resource type="DRL" source="classpath:services/getDiagnosticProcessStatus.drl" />
-
-    <resource type="DRL" source="classpath:default/subsession_default.drl" />
+        <resource type="DRL" source="classpath:services/startDiagnosticGuideProcess.drl" />
+        <resource type="DRL" source="classpath:services/advanceDiagnosticGuideProcess.drl" />
+        <resource type="DRL" source="classpath:services/setDiagnosticActionStatus.drl" />
+        <resource type="DRL" source="classpath:services/completeDiagnosticGuideProcess.drl" />
+        <resource type="DRL" source="classpath:services/getDiagnosticProcessStatus.drl" />
 
 
-	</add>
+
+        <resource type="CHANGE_SET" source="classpath:test/risk_model_list.xml" />
+        <resource type="CHANGE_SET" source="classpath:test/diag_model_list.xml" />
+
+        <resource type="DRL" source="classpath:services/probe.drl" />
+
+        <resource type="DRL" source="classpath:services/getSurvey.drl" />
+        <resource type="DRL" source="classpath:services/setSurvey.drl" />
+
+        <resource type="DRL" source="classpath:services/setRiskThreshold.drl" />
+        <resource type="DRL" source="classpath:services/getRiskModelsDetail.drl" />
+
+
+
+
+
+        <resource type="DRL" source="classpath:default/subsession_default.drl" />
+
+
+    </add>
 </change-set>

@@ -11,7 +11,7 @@ then
     ClassPathResource res = new ClassPathResource("org/kmr2/mock/mock_ptsd_decision.drl");
         res.setResourceType(ResourceType.DRL);
         res.setName("MockDecision");
-        res.setDescription("Post Traumatic Stress Disorder Decision");
+        res.setDescription("Post Traumatic Stress Disorder");
     insert( res );
 end
 

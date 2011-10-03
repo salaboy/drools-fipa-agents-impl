@@ -1,0 +1,27 @@
+package org.drools.test;
+
+
+import org.drools.fipa.body.content.Action;
+import java.util.List;
+import java.util.ArrayList;
+
+
+
+rule "Action_Request : probe"
+when
+    $a : Action( actionName == "probe",
+                 $patientId : this["patientId"]
+               )
+then
+    retract( $a );
+end
+
+
+query probe( String $patientId, List $return )
+    $return := List( ) from accumulate (
+        $o : Object(),
+        init( ArrayList l = new ArrayList(); ),
+        action( l.add(" >> " + $o.toString() + " \n" ); ),
+        result( l )
+    )
+end

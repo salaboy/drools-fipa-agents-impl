@@ -1,0 +1,35 @@
+
+package org.drools.test;
+
+import java.util.List;
+
+
+declare GetRiskModelsDetail
+    userId              : String
+    patientId           : String
+    modelIds            : List
+    riskModels          : List
+    successStatus       : boolean       = false
+    statusMessage       : String        = "(ok)"
+end
+
+declare RiskModelDetail
+    modelId             : String
+    position            : int
+    severity            : int
+    title               : String
+    disease             : String
+    relativeRisk        : int
+    relativeRiskRange   : int
+    displayThreshold    : int
+    surveyId            : String
+    dxProcessId         : String
+    dxProcessStatus     : String
+end
+
+
+declare RiskValue
+@format(trait)
+    value   : double
+    context : String
+end

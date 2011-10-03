@@ -13,7 +13,9 @@ declare DiagnosticGuideProcess
    status       : String                        = "n/a"
    decModel     : String
    diagModel    : String
+   disease      : String
    steps        : java.util.LinkedList
+   canAdvance   : boolean                       = false
    actions      : java.util.HashSet
 end
 
@@ -45,11 +47,17 @@ declare DxAction extends Surveyable
 
     upDate          : java.util.Date
 
-    form            : org.drools.informer.presentation.SurveyGUIAdapter
 end
 
 
 declare DxStep
     dxProcessId : String
     step        : int
+end
+
+
+declare DiagValue
+@format(trait)
+    value   : double
+    context : String
 end

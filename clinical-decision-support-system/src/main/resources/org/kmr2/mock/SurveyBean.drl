@@ -38,11 +38,10 @@ declare SurveyBean  extends Surveyable
     @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = "Please choose domicile : ", required = true )
     @AllowedAnswers( values = { "Rural=Rural Dom.", "Urban=Urban Dom."} )
 
-//TODO removed due to a clash caused by the hibernate annoatations lib. need to check it
-//    question3 : List
-//    @CollectionOfElements( targetElement = String.class )
-//    @QuestionMark( type = Question.QuestionType.TYPE_LIST, label = "Please choose all hobbies that apply : ", required = true )
-//    @AllowedAnswers( values = { "CMP=Camping", "FSH=Fishing", "GLF=Golf", "HGL=Hang Gliding" } )
+    question3 : List
+    @CollectionOfElements( targetElement = String.class )
+    @QuestionMark( type = Question.QuestionType.TYPE_LIST, label = "Please choose all hobbies that apply : ", required = true )
+    @AllowedAnswers( values = { "CMP=Camping", "FSH=Fishing", "GLF=Golf", "HGL=Hang Gliding" } )
 
     question4 : int     = 99
     @QuestionMark( type = Question.QuestionType.TYPE_NUMBER, label = "Please enter a numeric value : ", required = false )
@@ -55,6 +54,45 @@ declare SurveyBean  extends Surveyable
 
     question7 : int
     @QuestionMark( type = Question.QuestionType.TYPE_NUMBER, label = "Please enter a numeric value again: ", required = false )
+
+    question8 : boolean
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label=" True of false? ", required = false )
+
+    question9 : double
+    @QuestionMark( type = Question.QuestionType.TYPE_DECIMAL, label="Please enter a decimal value : ", required = false )
+
+    question10 : Double
+    @QuestionMark( type = Question.QuestionType.TYPE_DECIMAL, label = "Please choose one decimal: ", required = false )
+    @AllowedAnswers( values = { "0.21=#0.21", "1.34=#1.34", "2.88=#2.88" } )
+
+    question11 : String = "Date"
+    @QuestionMark( type = Question.QuestionType.TYPE_DATE, label = "Please choose a date : ", required = false, dateFormat = "dd/MM/yyyy" )
+    @AllowedAnswers( values = { "01/01/2001=1st Jan 2001", "02/02/2002=2nd Feb 2002"} )
+
+    question12 : boolean
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = "Please choose true or false : ", required = false )
+    @AllowedAnswers( values = { "true=Yes", "false=No."} )
+
+
+    question13 : List
+    @CollectionOfElements( targetElement = Integer.class )
+    @QuestionMark( type = Question.QuestionType.TYPE_LIST, label = "Please choose all lucky numbers : ", required = true )
+    @AllowedAnswers( values = { "1=1", "2=2", "3=3", "4=4", "5=5", "6=6", "7=7", "8=8"} )
+
+    question14 : List
+    @CollectionOfElements( targetElement = Double.class )
+    @QuestionMark( type = Question.QuestionType.TYPE_LIST, label = "Please choose all lucky decimals : ", required = true )
+    @AllowedAnswers( values = { "1.1=1.1", "2.2=2.2", "3.3=3.3", "4.4=4.4", "5.5=5.5", "6.6=6.6", "7.7=7.7", "8.8=8.8"} )
+
+    question15 : List
+    @CollectionOfElements( targetElement = Boolean.class )
+    @QuestionMark( type = Question.QuestionType.TYPE_LIST, label = "Please choose yes, no or both : ", required = true )
+    @AllowedAnswers( values = { "true=Yes", "false=No."} )
+
+    question16 : List
+    @CollectionOfElements( targetElement = Date.class )
+    @QuestionMark( type = Question.QuestionType.TYPE_LIST, label = "Please choose any date you like : ", required = true )
+    @AllowedAnswers( values = { "01/01/2001=1st Jan 2001", "02/02/2002=2nd Feb 2002", "03/03/2003=3rd March 2003"} )
 
 
     finalQuestion : boolean

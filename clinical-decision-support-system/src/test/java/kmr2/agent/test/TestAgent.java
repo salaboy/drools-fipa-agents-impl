@@ -1,14 +1,33 @@
 package kmr2.agent.test;
 
+import org.drools.KnowledgeBase;
+import org.drools.KnowledgeBaseConfiguration;
+import org.drools.KnowledgeBaseFactory;
+import org.drools.builder.KnowledgeBuilder;
+import org.drools.builder.KnowledgeBuilderFactory;
+import org.drools.builder.ResourceType;
+import org.drools.conf.AssertBehaviorOption;
 import org.drools.fipa.*;
 import org.drools.fipa.body.acts.Inform;
 import org.drools.informer.generator.FormRegistry;
+import org.drools.io.ResourceFactory;
+import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.rule.Variable;
+import org.drools.spi.KnowledgeHelper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.w3c.dom.Document;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
 import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class TestAgent {
 
@@ -60,6 +79,22 @@ public class TestAgent {
 
     }
 
+
+
+
+
+    @Test
+    public void testProbe() {
+        ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+            args.put("patientId","surveyPatient");
+
+        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("probe", args));
+                mainAgent.tell(req);
+                ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
+
+        System.out.println(ans.getBody());
+    }
 
     @Test
     public void testSurvey() {
@@ -123,6 +158,7 @@ public class TestAgent {
         args.clear();
         args.put("userId","drx");
         args.put("patientId","patient33");
+        args.put("surveyId",sid);
         args.put("questionId",deployments);
         args.put("answer","1");
         ACLMessage setS2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
@@ -132,6 +168,7 @@ public class TestAgent {
         args.clear();
         args.put("userId","drx");
         args.put("patientId","patient33");
+        args.put("surveyId",sid);
         args.put("questionId",gender);
         args.put("answer","female");
         ACLMessage setS1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
@@ -140,6 +177,7 @@ public class TestAgent {
         args.clear();
         args.put("userId","drx");
         args.put("patientId","patient33");
+        args.put("surveyId",sid);
         args.put("questionId",alcohol);
         args.put("answer","yes");
         ACLMessage setS3 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
@@ -148,12 +186,22 @@ public class TestAgent {
         args.clear();
         args.put("userId","drx");
         args.put("patientId","patient33");
+        args.put("surveyId",sid);
         args.put("questionId",age);
         args.put("answer","30");
         ACLMessage setS4 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
         mainAgent.tell(setS4);
 
 
+
+
+
+        args.clear();
+        args.put("patientId","patient33");
+        args.put("modelId",mid);
+        args.put("threshold","22");
+        ACLMessage setThold = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setRiskThreshold", args) );
+        mainAgent.tell(setThold);
 
 
 
@@ -232,8 +280,84 @@ public class TestAgent {
         System.out.println("***********************************************************************************************************************");
 
 
+        String statusXML = ((Inform) ans2.getBody()).getProposition().getEncodedContent();
+
+        String actionId = statusXML.substring(
+                statusXML.indexOf("<questionnaireId>") + "<questionnaireId>".length(),
+                statusXML.indexOf("</questionnaireId>")
+        );
+
+        System.err.println(actionId);
 
 
+//        args.clear();
+//        args.put("dxProcessId",dxProcessId);
+//        args.put("actionsId",actionId);
+//        args.put("status","Started");
+//        args.put("patientId", "patient33" );
+//
+//        ACLMessage reqAction1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
+//
+//        mainAgent.tell(reqAction1);
+
+        args.clear();
+        args.put("userId","patient33");
+        args.put("patientId","patient33");
+        args.put("surveyId",actionId);
+
+        ACLMessage actQuest = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args));
+        mainAgent.tell(actQuest);
+        ACLMessage ansQuest = mainResponseInformer.getResponses(actQuest).get(1);
+
+        String xml = ((Inform)ansQuest.getBody()).getProposition().getEncodedContent();
+
+
+        String alcoholQid = "";
+        try {
+            Document action = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( new ByteArrayInputStream(xml.getBytes()) );
+            XPath finder = XPathFactory.newInstance().newXPath();
+            String xpath = "//questionName[.='question']/../itemId";
+            alcoholQid = (String) finder.evaluate(xpath, action, XPathConstants.STRING);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail( e.getMessage() );
+        }
+        System.err.println(alcoholQid);
+
+
+        args.clear();
+        args.put("userId","drx");
+        args.put("patientId","patient33");
+        args.put("surveyId",actionId);
+        args.put("questionId",alcoholQid);
+        args.put("answer","true");
+        ACLMessage setAlchol = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
+        mainAgent.tell(setAlchol);
+
+
+
+        args.clear();
+        args.put("userId","patient33");
+        args.put("patientId","patient33");
+        args.put("surveyId",actionId);
+
+        ACLMessage actQuest2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args));
+        mainAgent.tell(actQuest2);
+        ACLMessage ansQuest2 = mainResponseInformer.getResponses(actQuest2).get(1);
+
+        String xml2 = ((Inform)ansQuest2.getBody()).getProposition().getEncodedContent();
+        System.err.println(xml2);
+
+
+        args.clear();
+        args.put("dxProcessId",dxProcessId);
+        args.put("actId",actionId);
+        args.put("status","Complete");
+        args.put("patientId", "patient33" );
+
+        ACLMessage reqAction1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
+
+        mainAgent.tell(reqAction1);
 
 
         args.clear();
@@ -245,6 +369,19 @@ public class TestAgent {
         mainAgent.tell(next);
 
         System.out.println("***********************************************************************************************************************");
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -276,15 +413,112 @@ public class TestAgent {
         System.out.println(ans99.getBody());
 
 
-        FormRegistry registry = new FormRegistry();
+
+
 
         Collection wm2 = mainAgent.getInnerSession("patient33").getObjects();
         System.out.println("*********");
-        System.out.println();
+        System.out.println( wm2.size() );
 
 
     }
 
+
+
+    @Test
+       public void testX() {
+           String s =
+               "package org.drools.test\n" +
+               "import " + Action.class.getCanonicalName() + "\n" +
+               "import " + Answer.class.getCanonicalName() + "\n" +
+               "rule r1 when\n" +
+               "       $a : Action( actionName == \"setDiagnosticActionStatus\", \n" +
+               "                    $processId : this[\"dxProcessId\"], \n" +
+               "                    $actionId : this[\"actionId\"], \n" +
+               "                    $status : this[\"status\"], \n" +
+               "                    $patientId : this[\"patientId\"] )\n" +
+               "then\n" +
+               "    System.out.println('execute');\n" +
+               "    insert( new Answer((String) $status, \"status\", (String) $actionId ) );\n" +
+               "    retract( $a );" +
+               "end\n";
+
+           KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+           kbuilder.add( ResourceFactory.newByteArrayResource(s.getBytes()), ResourceType.DRL );
+
+           if ( kbuilder.hasErrors() ) {
+               fail( kbuilder.getErrors().toString() );
+           }
+
+           KnowledgeBaseConfiguration kconf = KnowledgeBaseFactory.newKnowledgeBaseConfiguration();
+           kconf.setOption( AssertBehaviorOption.EQUALITY );
+           KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase(kconf);
+
+           kbase.addKnowledgePackages( kbuilder.getKnowledgePackages() );
+
+
+           StatefulKnowledgeSession ksession = kbase.newStatefulKnowledgeSession();
+
+           Action action = new Action();
+           action.setActionName( "setDiagnosticActionStatus" );
+           action.put( "dxProcessId", "v1" );
+           action.put( "actionId", "v2" );
+           action.put( "status", "v3" );
+           action.put( "patientId", "v4" );
+
+           ksession.insert( action );
+           ksession.fireAllRules();
+       }
+
+       public static class Action extends HashMap {
+           private String actionName ;
+
+           public String getActionName() {
+               return actionName;
+           }
+
+           public void setActionName(String actionName) {
+               this.actionName = actionName;
+           }
+       }
+
+       public static class Answer {
+           private String value;
+           private String field;
+           private String id;
+
+           public Answer(String value,
+                         String field,
+                         String id) {
+               this.value = value;
+               this.field = field;
+               this.id = id;
+           }
+
+           public String getValue() {
+               return value;
+           }
+
+           public void setValue(String value) {
+               this.value = value;
+           }
+
+           public String getField() {
+               return field;
+           }
+
+           public void setField(String field) {
+               this.field = field;
+           }
+
+           public String getId() {
+               return id;
+           }
+
+           public void setId(String id) {
+               this.id = id;
+           }
+       }
 
 
 
