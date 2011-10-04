@@ -1,5 +1,6 @@
 package org.drools.fipa.client.helpers;
 
+import java.net.URL;
 import org.drools.dssagentserver.SynchronousDroolsAgentServiceImpl;
 import org.drools.dssagentserver.SynchronousDroolsAgentServiceImplService;
 import org.drools.fipa.*;
@@ -7,11 +8,11 @@ import org.drools.fipa.body.acts.AbstractMessageBody;
 import org.drools.fipa.body.acts.Inform;
 import org.drools.fipa.body.acts.InformRef;
 import org.drools.fipa.body.content.Action;
-import org.drools.fipa.body.content.Ref;
 import org.drools.runtime.rule.Variable;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import javax.xml.namespace.QName;
 
 public class SynchronousRequestHelper {
 
@@ -20,9 +21,17 @@ public class SynchronousRequestHelper {
         private AbstractMessageBody returnBody;
 
         private Encodings encode = Encodings.XML;
+        
+        private URL endpointURL;
+        private QName qname;
 
         public SynchronousRequestHelper() {
 
+        }
+        
+        public SynchronousRequestHelper(URL url) {
+            this.endpointURL = url;
+            this.qname = new QName("http://dssagentserver.drools.org/", "SynchronousDroolsAgentServiceImplService");
         }
 
         public SynchronousRequestHelper( Encodings enc ) {
@@ -42,7 +51,12 @@ public class SynchronousRequestHelper {
                     break;
                 }
             }
-            SynchronousDroolsAgentServiceImpl synchronousDroolsAgentServicePort = new SynchronousDroolsAgentServiceImplService().getSynchronousDroolsAgentServiceImplPort();
+            SynchronousDroolsAgentServiceImpl synchronousDroolsAgentServicePort = null;
+            if(this.endpointURL == null || this.qname == null){
+                 synchronousDroolsAgentServicePort = new SynchronousDroolsAgentServiceImplService().getSynchronousDroolsAgentServiceImplPort();
+            } else{
+                 synchronousDroolsAgentServicePort = new SynchronousDroolsAgentServiceImplService(this.endpointURL, this.qname).getSynchronousDroolsAgentServiceImplPort();
+            }
             ACLMessageFactory factory = new ACLMessageFactory( encode );
 
             Action action = MessageContentFactory.newActionContent(methodName, args);
