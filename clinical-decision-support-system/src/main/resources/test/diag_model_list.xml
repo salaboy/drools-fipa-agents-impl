@@ -18,6 +18,6 @@
   xs:schemaLocation='http://drools.org/drools-5.0/change-set http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-api/src/main/resources/change-set-1.0.0.xsd'>
 	<add>
             <resource type="DRL" source="classpath:org/kmr2/mock/mock_ptsd_diag.ref" name="Mock PTSD Diagnostic" description="Post Traumatic Stress Disorder Diagnostic" />
-            <!-- <resource type="DRL" source="classpath:org/kmr2/mock/mock_ptsd_decision.ref" name="Mock PTSD Decision" description="Post Traumatic Stress Disorder Decision" /> -->
+            <resource type="DRL" source="classpath:org/kmr2/mock/mock_ptsd_decision.ref" name="Mock PTSD Decision" description="Post Traumatic Stress Disorder Decision" />
 	</add>
 </change-set>

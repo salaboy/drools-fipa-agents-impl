@@ -7,18 +7,6 @@ import org.drools.pmml_4_0.ModelMarker;
 
 
 
-
-declare RiskThreshold
-    modelId     : String        @key
-    threshold   : int
-end
-
-
-query getRiskThreshold( String $modelId, int $thold, RiskThreshold $holder )
-    holder := RiskThreshold( $modelId, $thold ; )
-end
-
-
 rule "Action_Request : setRiskThreshold"
 when
     $a : Action( actionName == "setRiskThreshold",
@@ -27,7 +15,7 @@ when
                  $modelId   : this["modelId"],
                  $value     : this["threshold"]
                )
-    $h : RiskThreshold( $modelId, $prevThold ; )
+    $h : RiskThreshold( modelId == $modelId )
 then
     retract( $a );
     $h.setThreshold( Integer.valueOf( (String) $value ) );
@@ -42,8 +30,9 @@ when
                  $modelId   : this["modelId"],
                  $value     : this["threshold"]
                )
-    not  RiskThreshold( $modelId, $prevThold ; )
+    not  RiskThreshold( modelId == $modelId )
 then
+    insert( new RiskThreshold( (String) $modelId, Integer.valueOf( (String) $value ) ) );
     retract( $a );
 end
 
@@ -56,17 +45,20 @@ rule "Support Threshold"
 when
     ModelMarker( $mid : modelName );
     not RiskThreshold( modelId == $mid )
+    ?defaultRiskThreshold( $def ; )
 then
-    insert( new RiskThreshold( $mid, 50 ) );
+    insert( new RiskThreshold( $mid, $def ) );
 end
 
 rule "Clean Threshold"
 when
     $risk : RiskThreshold( $mid : modelId )
-    not ModelMarker( modelName == $mid )
+    not InternalResource( name == $mid )
 then
     retract( $risk );
 end
+
+
 
 
 query setRiskThreshold( String $userId, String $patientId, String $modelId, String $threshold, int $return )

@@ -1,2 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context antiJARLocking="true" path="/dss-agent-custom-service"/>
+<Context antiJARLocking="true" path="/clinical-decision-support-agent">
+        <ResourceLink
+            name="bean/HumanTaskService"
+            global="bean/HumanTaskService"
+            type="org.jbpm.task.service.local.LocalTaskService"/>
+
+</Context>

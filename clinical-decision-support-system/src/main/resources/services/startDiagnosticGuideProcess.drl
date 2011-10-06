@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.drools.pmml_4_0.ModelMarker;
+import org.drools.pmml_4_0.PMML4Wrapper;
 
 
 
@@ -42,7 +43,10 @@ when
     not   ModelMarker( modelName == $dxModel )
     $rs : InternalResource( name == $dxModel )
 then
+    String defPack = PMML4Wrapper.getPack();
+    PMML4Wrapper.setPack( "org.drools.pmml_4_0.diag.ptsd" );
     manager.addResource( $dxModel, $rs );
+    PMML4Wrapper.setPack( defPack );
 end
 
 rule "Load Decision Model"

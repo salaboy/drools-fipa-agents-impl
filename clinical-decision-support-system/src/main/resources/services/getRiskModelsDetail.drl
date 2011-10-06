@@ -10,13 +10,15 @@ import org.drools.informer.*;
 import org.drools.informer.xml.ChangeCollector;
 import org.drools.informer.presentation.*;
 
+import org.drools.interaction.*;
+
 import org.drools.io.internal.InternalResource;
 import java.util.List;
 import java.util.ArrayList;
 
 import org.drools.pmml_4_0.ModelMarker;
 import org.drools.pmml_4_0.PMML4Field;
-
+import org.drools.pmml_4_0.PMML4Wrapper;
 
 import org.kmr2.decision.*;
 
@@ -52,7 +54,10 @@ when
     not   ModelMarker( modelName == $id )
     $rs : InternalResource( name == $id )
 then
+    String defPack = PMML4Wrapper.getPack();
+    PMML4Wrapper.setPack( "org.drools.pmml_4_0.risk."+$id );
     manager.addResource( $id, $rs );
+    PMML4Wrapper.setPack( defPack );
 end
 
 
@@ -60,7 +65,7 @@ rule "Action_Request : getRiskModelsDetail - model info"
 when
     $mm   : ModelMarker( $id : modelName )
     $res  : InternalResource( name == $id, $descr : description )
-    $grmd : GetRiskModelsDetail( $details : riskModels )
+    $grmd : GetRiskModelsDetail( $details : riskModels, modelIds contains $id )
     not     RiskModelDetail( modelId == $id ) from $details
 then
     RiskModelDetail rmd = new RiskModelDetail();
@@ -85,8 +90,9 @@ end
 rule "Update Risk I"
 when
     $rmd : RiskModelDetail( $mid : modelId )
-    $fld : PMML4Field( context == $mid, name == "Risk" )
+    $fld : PMML4Field( context == $mid, name == "Risk"  )
 then
+    System.out.println(" DONNING A RISK VALUE ");
     RiskValue val = don( $fld, RiskValue.class, true );
 end
 

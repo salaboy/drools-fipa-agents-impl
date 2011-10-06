@@ -1,0 +1,91 @@
+package org.drools.test;
+
+import org.drools.fipa.body.content.Action;
+import org.drools.fipa.MessageContentEncoder;
+import org.drools.fipa.Encodings;
+
+
+import org.drools.io.internal.InternalResource;
+import java.util.List;
+import java.util.ArrayList;
+
+import org.drools.pmml_4_0.ModelMarker;
+
+
+
+
+declare ModelElement
+    modelId             : String    @key
+    title               : String
+    disease             : String
+    displayThreshold    : int
+end
+
+declare ModelList
+    patientId           : String    @key
+    models              : List
+    success             : boolean
+    successMessage      : String
+end
+
+
+rule "Action_Request : getRiskModels Init"
+salience 10
+when
+    $a :  Action( actionName == "getRiskModels",
+                  $userId    : this["userId"],
+                  $patientId : this["patientId"]
+                )
+    not   ModelList( $patientId ; )
+then
+    insert( new ModelList( (String) $patientId, null, true, "(ok)" ) );
+end
+
+rule "Action_Request : getRiskModels Clear"
+when
+    $a :  Action( actionName == "getRiskModels",
+                  $userId    : this["userId"],
+                  $patientId : this["patientId"]
+                )
+then
+    retract( $a );
+end
+
+
+
+rule "Combine with threshold"
+when
+    InternalResource( $id : name, $type : description, tags contains "Risk" )
+    RiskThreshold( modelId == $id, $thold : threshold )
+then
+    insertLogical( new ModelElement( $id, $type, $type, $thold ) );
+end
+
+rule "Default threshold"
+when
+    InternalResource( $id : name, $type : description, tags contains "Risk" )
+    not RiskThreshold( modelId == $id )
+    ?defaultRiskThreshold( $def ; )
+then
+    insertLogical( new ModelElement( $id, $type, $type, $def ) );
+end
+
+
+rule "Listing"
+when
+    $list : List( $num : size ) from accumulate (
+        $m : ModelElement()
+        collectList( $m )
+    )
+    $m : ModelList()
+then
+    $m.setModels( new ArrayList( $list ) );
+end
+
+
+query getRiskModels( String $userId, String $patientId, Object $return )
+    $return := ModelList( patientId == $patientId )
+end
+
+
+
