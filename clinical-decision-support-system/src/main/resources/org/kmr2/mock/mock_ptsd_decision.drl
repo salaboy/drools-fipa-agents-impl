@@ -1,4 +1,4 @@
-package org.kmr2.decision;
+package org.kmr2.decision.impl;
 
 import org.drools.pmml_4_0.ModelMarker;
 import org.drools.pmml_4_0.PMML4Field;
@@ -14,11 +14,16 @@ import org.drools.informer.generator.annotations.Questionable;
 import org.drools.informer.generator.annotations.QuestionMark;
 import org.drools.informer.generator.annotations.AllowedAnswers;
 
+import org.drools.interaction.*;
+import org.kmr2.decision.*;
 
 
 
 
-declare AskAlcohol extends DxAction
+
+
+
+declare AskAlcohol extends org.kmr2.decision.DxAction
 @Questionable( label = "Ask for Alcohol Abuse", language = "EN" )
 
     descr           : String            = "Ask for alcohol abuse"
@@ -30,7 +35,7 @@ declare AskAlcohol extends DxAction
 end
 
 
-declare AskDeployment extends DxAction
+declare AskDeployment extends org.kmr2.decision.DxAction
 @Questionable( label = "Ask for Number of Deployments", language = "EN" )
 
     descr           : String            = "Ask for number of deployments "
@@ -39,6 +44,14 @@ declare AskDeployment extends DxAction
     @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = " How many times have you been deployed ? ", required = true )
     @AllowedAnswers( values = { "0=No deployments", "1=Just once", "2+=Two or more times"  } )
 
+end
+
+
+
+
+
+query isUseful( DxAction $act, Double $use )
+    $use := Double() from Math.random()
 end
 
 
@@ -93,7 +106,7 @@ end
 rule "Mark"
 when
 then
-    insert( new ModelMarker( "MockDecision", "Decision Model" ) );
+    insert( new ModelMarker( "MockDecision", "Post Traumatic Stress Disorder" ) );
 end
 
 
@@ -200,21 +213,6 @@ end
 
 
 
-query isUseful( DxAction $act, Double $use )
-    $use := Double() from Math.random()
-end
-
-query ticket( String $className, String $formId, InteractionTicket $ticket )
-    $ticket := InteractionTicket( id == $formId )
-end
-
-//query getAction( String $formId, DxAction $act )
-//    $act := DxAction( $formId := questionnaireId )
-//end
-
-//query getForm( String $surveyId, SurveyGUIAdapter $return )
-//    $return := SurveyGUIAdapter( $surveyId := itemId )
-//end
 
 rule "Initialize action forms"
 salience 9999
@@ -223,7 +221,8 @@ when
 then
     String ticketId = $args[1].toString();
     InteractionTicket ticket = new InteractionTicket( ticketId,
-                                                      new java.util.ArrayList() );
+                                                      new java.util.ArrayList(),
+                                                      null );
 
     ticket.getInteractions().add( new Interaction( $args[0].toString(), new java.util.ArrayList() ) );
     System.out.println( "Created " + ticket + " on the fly");
@@ -373,16 +372,6 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
-
 rule "Remove step marker"
 salience -9999
 when
@@ -390,3 +379,6 @@ when
 then
     retract( $x );
 end
+
+
+

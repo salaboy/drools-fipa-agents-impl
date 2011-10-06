@@ -1,0 +1,18 @@
+package org.kmr2;
+
+import org.drools.builder.ResourceType;
+import org.drools.io.impl.*;
+
+rule "Init PTSD Descriptors"
+salience 999
+when
+then
+    System.out.println("Insert reference to cold risk model for late loading");
+    ClassPathResource res = new ClassPathResource("org/kmr2/mock/mock_cold.pmml");
+        res.setResourceType(ResourceType.PMML);
+        res.setName("MockCold");
+        res.setDescription("Uncommon Cold");
+        res.setTags("E,Risk");
+    insert( res );
+end
+
