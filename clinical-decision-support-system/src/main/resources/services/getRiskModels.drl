@@ -24,7 +24,7 @@ end
 declare ModelList
     patientId           : String    @key
     models              : List
-    success             : boolean
+    successStatus       : boolean
     successMessage      : String
 end
 
@@ -56,7 +56,7 @@ end
 rule "Combine with threshold"
 when
     InternalResource( $id : name, $type : description, tags contains "Risk" )
-    RiskThreshold( modelId == $id, $thold : threshold )
+    RiskThreshold( modelId == $id, type == "Alert", $thold : threshold )
 then
     insertLogical( new ModelElement( $id, $type, $type, $thold ) );
 end
@@ -64,7 +64,7 @@ end
 rule "Default threshold"
 when
     InternalResource( $id : name, $type : description, tags contains "Risk" )
-    not RiskThreshold( modelId == $id )
+    not RiskThreshold( modelId == $id, type == "Alert" )
     ?defaultRiskThreshold( $def ; )
 then
     insertLogical( new ModelElement( $id, $type, $type, $def ) );

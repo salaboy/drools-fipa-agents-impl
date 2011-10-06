@@ -1,0 +1,168 @@
+
+package org.kmr2.mock;
+
+import org.drools.fipa.body.content.Action;
+import org.drools.fipa.*;
+import org.drools.test.RiskThreshold;
+import org.drools.test.RiskValue;
+
+import org.drools.interaction.*;
+
+import org.drools.informer.generator.Surveyable;
+
+import org.drools.informer.generator.annotations.Questionable;
+import org.drools.informer.generator.annotations.QuestionMark;
+import org.drools.informer.generator.annotations.AllowedAnswers;
+
+import org.drools.informer.generator.FormRegistry;
+
+import org.mvel2.templates.*;
+
+import org.drools.dssagentserver.helpers.*;
+import java.util.List;
+
+
+
+declare PatientAcknowledgment extends Surveyable
+@Questionable( label = "Please acknowledge the above message", language = "EN" )
+
+    questionnaireId     : String
+
+    ack                 : String
+    @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = " Do you acknowledge the content above ? ", required = false )
+    @AllowedAnswers( values = { "accept=Accept", "reject=Reject", "hold=Hold"  } )
+
+end
+
+declare ProviderAcknowledgment extends Surveyable
+@Questionable( label = "Please acknowledge the above message", language = "EN" )
+
+    questionnaireId     : String
+
+    ack                 : String
+    @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = " Do you acknowledge the content above ? ", required = false )
+    @AllowedAnswers( values = { "accept=Accept", "reject=Reject", "hold=Hold", "ignore=Ignore", "escalate=Escalate"  } )
+
+end
+
+
+rule "Install"
+salience 9999
+when
+then
+    FormRegistry.register( PatientAcknowledgment.class );
+    FormRegistry.register( ProviderAcknowledgment.class );
+end
+
+
+
+
+
+
+rule "At risk"
+when
+            RiskThreshold( $ctx : modelId, $thold : threshold )
+    $risk : RiskValue( context == $ctx, value > ($thold / 100.0) )
+    ?patientName( $pat ; )
+    ?userName( $pro ; )
+then
+    System.err.println(" AT RISK ------------ of " + $ctx + " contact " + $pat + " and " + $pro );
+
+    InteractionTicket ticket = new InteractionTicket( java.util.UUID.randomUUID().toString(),
+                                                      new java.util.ArrayList(),
+                                                      $risk );
+
+    System.out.println("Just created a ticket " + ticket );
+
+    ticket.getInteractions().add( new Interaction( "org.kmr2.mock.PatientAcknowledgment",
+                                                    new java.util.LinkedList( java.util.Arrays.asList( $pat ) ) ) );
+    ticket.getInteractions().add( new Interaction( "org.kmr2.mock.ProviderAcknowledgment",
+                                                    new java.util.LinkedList( java.util.Arrays.asList( $pro, "eafry" ) ) ) );
+    insert( ticket );
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rule "Dispatch"
+salience -200
+when
+    $ticket : InteractionTicket( $ticketId : id,
+                                 $inters : interactions,
+                                 $source : source  )
+    $convo  : TicketActor( $convoId, $ticketId, $actorId ; )
+    ?conversationForms( $ticketId, $actorId, $list ; )
+              RiskValue( $value, $model ; ) from $source
+    ?patientName( $pat ; )
+    ?userName( $pro ; )
+then
+    System.out.println( " ******************************* Deliver to " + $actorId + "  : >> " + $list + " in " + $convo );
+//    SynchronousRequestHelper helper = new SynchronousRequestHelper( new java.net.URL("TODO NEED THE EXACT URL") );
+
+
+    java.util.Map vars = new java.util.HashMap(10);
+        vars.put("title", $model );
+        vars.put("patient", $pat );
+        vars.put("disease", $model );
+        vars.put("risk", 100*$value );
+        vars.put("provider", $pro );
+        vars.put("nonRisk", (100-100*$value) );
+        vars.put("surveyId", $list.get(0) );
+
+    CompiledTemplate template = (CompiledTemplate) org.kmr2.TemplateBuilder.getRegistry().getNamedTemplate( "risk_alert.template" );
+    String body = ( TemplateRuntime.execute ( template, null, vars ).toString() );
+
+    java.util.LinkedHashMap map = new java.util.LinkedHashMap();
+    map.put("refId", $ticketId );
+    map.put("conversationId", $convoId );
+    map.put("subjectAbout", new String[] { $pat, $pro } );          // Array of ids, current alert creation will grab the first id as the ptUnitNumber.
+    map.put("sender", $pro );                // id
+    map.put("mainRecipients", new String[] { $actorId } );         // Array of Ids
+    map.put("secondaryRecipients", new String[0] );    // Array of Ids
+    map.put("hiddenRecipients", new String[0] );       // Array of Ids
+    map.put("type", "ALERT" );
+    map.put("header", "Risk threshold exceeded : " + $model );
+    map.put("body", body );
+    map.put("priority", "Critical" );
+    map.put("deliveryDate", new java.util.Date() );
+    map.put("status", "New" );                 // [ "New" | "Read" | "Unread" | "Escalated" | ... ]
+
+    System.out.println( map );
+
+
+//    helper.invokeRequest("deliverMessage",args);
+end
+//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

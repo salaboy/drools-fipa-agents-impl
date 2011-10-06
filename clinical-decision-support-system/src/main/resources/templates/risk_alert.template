@@ -1,0 +1,32 @@
+
+@declare{'riskAlert'}
+
+<h2>@{title}</h2>
+(This is free form HTML with an optionally embedded survey)
+
+Dear @{patient},
+
+<p>
+this is a gentle reminder that you are in a high risk condition
+to develop the disease known as @{disease}.
+</p>
+
+<p>
+As should be clear from the following chart, you have an
+estimated probability of @{risk}%, which is above the acceptable
+threshold set by your provider, doctor @{provider}.
+</p>
+
+(Then, later on down the page in the same HTML, possibly a chart...)
+<p class='agentEmbed' type='chart' type='chart' cht='v' chtt='@{disease}' chd='@{risk},@{nonRisk}' />
+
+@{title}:
+<p class='agentEmbed' type='survey' id='@{surveyId}' /p>
+
+<br/>
+Thank you very much, <br/>
+<p>Your Friendly Clinical Decision Support Agent</p>
+
+@end{}
+
+@includeNamed{'riskAlert'}

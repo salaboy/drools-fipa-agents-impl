@@ -90,9 +90,9 @@ end
 rule "Update Risk I"
 when
     $rmd : RiskModelDetail( $mid : modelId )
-    $fld : PMML4Field( context == $mid, name == "Risk"  )
+    $fld : PMML4Field( context == $mid, name matches ".*Risk$"  )
 then
-    System.out.println(" DONNING A RISK VALUE ");
+    System.out.println(" DONNING A RISK VALUE " + $fld );
     RiskValue val = don( $fld, RiskValue.class, true );
 end
 
@@ -108,9 +108,9 @@ end
 rule "Threshold"
 when
     $rmd : RiskModelDetail( $mid : modelId )
-    getRiskThreshold( $mid, $value ; )
+    getRiskThreshold( $mid, "Alert", $value ; )
 then
-    $rmd.setDisplayThreshold( $value );
+    $rmd.setAlertThreshold( $value );
 end
 
 

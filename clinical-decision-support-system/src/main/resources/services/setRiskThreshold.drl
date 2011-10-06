@@ -13,9 +13,10 @@ when
                  $userId    : this["userId"],
                  $patientId : this["patientId"],
                  $modelId   : this["modelId"],
+                 $type      : this["type"],
                  $value     : this["threshold"]
                )
-    $h : RiskThreshold( modelId == $modelId )
+    $h : RiskThreshold( modelId == $modelId, type == $type )
 then
     retract( $a );
     $h.setThreshold( Integer.valueOf( (String) $value ) );
@@ -28,11 +29,12 @@ when
                  $userId    : this["userId"],
                  $patientId : this["patientId"],
                  $modelId   : this["modelId"],
+                 $type      : this["type"],
                  $value     : this["threshold"]
                )
-    not  RiskThreshold( modelId == $modelId )
+    not  RiskThreshold( modelId == $modelId, type == $type )
 then
-    insert( new RiskThreshold( (String) $modelId, Integer.valueOf( (String) $value ) ) );
+    insert( new RiskThreshold( (String) $modelId, (String) $type, Integer.valueOf( (String) $value ) ) );
     retract( $a );
 end
 
@@ -44,10 +46,10 @@ end
 rule "Support Threshold"
 when
     ModelMarker( $mid : modelName );
-    not RiskThreshold( modelId == $mid )
+    not RiskThreshold( modelId == $mid, type == "Alert" )
     ?defaultRiskThreshold( $def ; )
 then
-    insert( new RiskThreshold( $mid, $def ) );
+    insert( new RiskThreshold( $mid, "Alert", $def ) );
 end
 
 rule "Clean Threshold"
@@ -61,6 +63,6 @@ end
 
 
 
-query setRiskThreshold( String $userId, String $patientId, String $modelId, String $threshold, int $return )
-    RiskThreshold( $modelId, $return ; )
+query setRiskThreshold( String $userId, String $patientId, String $modelId, String $type, String $threshold, int $return )
+    RiskThreshold( $modelId, $type, $return ; )
 end

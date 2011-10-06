@@ -26,11 +26,8 @@
         <resource type="DRL" source="classpath:default/interaction.drl" />
 
 
-
         <resource type="DRL" source="classpath:declares/risk_declares.drl" />
         <resource type="DRL" source="classpath:declares/dxGuide_declares.drl" />
-        <!--  TODO: fix? issue in KnowledgeAgent to load this dynamically -->
-        <resource type="DRL" source="classpath:org/kmr2/mock/mock_ptsd_decision.drl" name="MockDecision" description="Post Traumatic Stress Disorder" />
 
 
 
@@ -52,12 +49,19 @@
 
         <resource type="DRL" source="classpath:services/setRiskThreshold.drl" />
         <resource type="DRL" source="classpath:services/getRiskModelsDetail.drl" />
-
-
+        <resource type="DRL" source="classpath:services/getRiskModels.drl" />
 
 
 
         <resource type="DRL" source="classpath:default/subsession_default.drl" />
+
+
+
+
+
+        <!--  TODO: fix? issue in KnowledgeAgent to load this dynamically -->
+        <resource type="DRL" source="classpath:org/kmr2/mock/mock_ptsd_decision.drl" name="MockDecision" description="Post Traumatic Stress Disorder" />
+        <resource type="DRL" source="classpath:default/usecase_1.drl" />
 
 
     </add>
