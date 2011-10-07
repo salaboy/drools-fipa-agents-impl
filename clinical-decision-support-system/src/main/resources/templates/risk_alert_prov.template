@@ -8,7 +8,7 @@ Dear @{provider},
 
 <p>
 Your patient @{patient} has a high risk of developing the disease known as @{disease}.
-The estimated rate is around @{value}.
+The estimated rate is around @{risk}.
 </p>
 
 <p>

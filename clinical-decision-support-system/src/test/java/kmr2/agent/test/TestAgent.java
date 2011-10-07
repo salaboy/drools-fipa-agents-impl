@@ -47,7 +47,6 @@ public class TestAgent {
         mainConfig.setChangeset( "default/agent_changeset.xml" );
         mainConfig.setDefaultSubsessionChangeSet( "default/subsession_default.xml" );
         mainConfig.setResponseInformer( mainResponseInformer );
-        mainConfig.setTemplateRegistry( TemplateBuilder.getRegistry() );
         DroolsAgentConfiguration.SubSessionDescriptor subDescr1 = new DroolsAgentConfiguration.SubSessionDescriptor(
                 "sessionSurvey",
                 "test/survey_test.xml",
@@ -138,6 +137,7 @@ public class TestAgent {
         args.clear();
         args.put("userId","drX");
         args.put("patientId","patient33");
+        args.put("types", Arrays.asList("E"));
 
         ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getRiskModels", args));
         mainAgent.tell(req);
@@ -343,8 +343,9 @@ public class TestAgent {
         args.clear();
         args.put("userId", "docX");
         args.put("patientId", "patient33" );
-        args.put("decModelId","MockDecision");
-        args.put("diagModelId","MockDiag");
+//        args.put("decModelId","MockDecision");
+//        args.put("diagModelId","MockDiag");
+        args.put("disease", "Post Traumatic Stress Disorder");
         ACLMessage start = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("startDiagnosticGuideProcess", args) );
 
         mainAgent.tell(start);

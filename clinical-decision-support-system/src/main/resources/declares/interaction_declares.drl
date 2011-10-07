@@ -1,0 +1,78 @@
+package org.drools.interaction;
+
+
+import java.util.*;
+import org.drools.base.DroolsQuery;
+import org.drools.expectations.*;
+import org.drools.informer.generator.*;
+import org.drools.informer.*;
+
+import org.jbpm.task.HumanTaskServiceLookup;
+import org.jbpm.task.TaskService;
+
+
+import org.drools.informer.Progress;
+
+
+
+
+
+declare InteractionTicket
+    id              : String
+    interactions    : List      // <Interaction>
+    source          : Object
+end
+
+declare TicketActor
+    interactionId   : String   @key
+    ticketId        : String
+    actorId         : String
+end
+
+
+declare Interaction
+    type            : String
+    bodyTemplateId  : String
+    receivers       : List      // <String>
+end
+
+
+declare FormMarker
+    ticketId        : String
+    type            : String
+    formId          : String
+end
+
+declare Alert
+@role( event )
+    ticketId        : String
+    destination     : String
+    formId          : String
+    bodyTemplateId  : String
+end
+
+
+
+
+
+query formMarker( String $ticketId, String $type, String $formId )
+    FormMarker( $ticketId, $type, $formId ; )
+end
+
+query owner( String $formId, String $user )
+    Alert( $ticket, $user, $formId ; )
+end
+
+query ticket( String $className, String $formId, InteractionTicket $ticket )
+    $ticket := InteractionTicket( id == $formId )
+end
+
+
+query conversationForms( String $ticketId, String $actorId, List $formIds, List $bodies )
+    accumulate (
+                 Alert( $ticketId, $actorId, $formId, $body ; ),
+                 $formIds : collectList( $formId ),
+                 $bodies  : collectList( $body )
+               )
+end
+

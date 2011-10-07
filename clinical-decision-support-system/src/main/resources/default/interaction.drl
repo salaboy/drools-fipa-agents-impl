@@ -17,68 +17,6 @@ import org.drools.informer.Progress;
 
 
 
-declare InteractionTicket
-    id              : String
-    interactions    : List      // <Interaction>
-    source          : Object
-end
-
-declare TicketActor
-    interactionId   : String   @key
-    ticketId        : String
-    actorId         : String
-end
-
-
-declare Interaction
-    type            : String
-    receivers       : List      // <String>
-end
-
-
-declare FormMarker
-    ticketId        : String
-    type            : String
-    formId          : String
-end
-
-declare Alert
-@role( event )
-    ticketId        : String
-    destination     : String
-    formId          : String
-end
-
-
-
-
-
-query formMarker( String $ticketId, String $type, String $formId )
-    FormMarker( $ticketId, $type, $formId ; )
-end
-
-query owner( String $formId, String $user )
-    Alert( $ticket, $user, $formId ; )
-end
-
-query ticket( String $className, String $formId, InteractionTicket $ticket )
-    $ticket := InteractionTicket( id == $formId )
-end
-
-
-query conversationForms( String $ticketId, String $actorId, List $list )
-    $list   := List() from accumulate (
-                Alert( $ticketId, $actorId, $formId ; )
-                collectList( $formId )
-              )
-end
-
-
-
-
-
-
-
 rule "Open interaction"
 salience 999
 when
@@ -94,11 +32,11 @@ rule "Interactions"
 when
     $ticket : InteractionTicket( $ticketId : id,
                                  $inters : interactions )
-    Interaction( $type : type, this memberOf $inters, receivers.size > 0, $receiver : receivers[0] )
+    Interaction( $type : type, this memberOf $inters, receivers.size > 0, $receiver : receivers[0], $body : bodyTemplateId )
     formMarker( $ticketId, $type, $formId ; )
 then
     System.out.println(" Form is ready " + $formId );
-    insert( new Alert( $ticketId, $receiver.toString(), $formId ) );
+    insert( new Alert( $ticketId, $receiver.toString(), $formId, $body ) );
 end
 
 rule "System Interactions"
@@ -243,18 +181,4 @@ end
 
 
 
-
-
-
-
-
-
-//rule "Log"
-//when
-//    $o : Object()
-//then
-////    if ( ! $o.getClass().getPackage().getName().contains("Expect") ) {
-//    System.err.println( $o );
-////    }
-//end
 

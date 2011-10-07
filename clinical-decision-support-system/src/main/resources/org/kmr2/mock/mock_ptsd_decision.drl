@@ -19,8 +19,8 @@ import org.kmr2.decision.*;
 
 
 
-
-
+declare org.kmr2.decision.DxAction
+end
 
 
 declare AskAlcohol extends org.kmr2.decision.DxAction
@@ -213,7 +213,6 @@ end
 
 
 
-
 rule "Initialize action forms"
 salience 9999
 when
@@ -224,7 +223,7 @@ then
                                                       new java.util.ArrayList(),
                                                       null );
 
-    ticket.getInteractions().add( new Interaction( $args[0].toString(), new java.util.ArrayList() ) );
+    ticket.getInteractions().add( new Interaction( $args[0].toString(), null, new java.util.ArrayList() ) );
     System.out.println( "Created " + ticket + " on the fly");
     insert( ticket );
 end

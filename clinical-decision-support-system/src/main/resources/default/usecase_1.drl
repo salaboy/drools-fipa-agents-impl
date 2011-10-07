@@ -72,12 +72,13 @@ then
                                                       new java.util.ArrayList(),
                                                       $risk );
 
-    System.out.println("Just created a ticket " + ticket );
-
     ticket.getInteractions().add( new Interaction( "org.kmr2.mock.PatientAcknowledgment",
-                                                    new java.util.LinkedList( java.util.Arrays.asList( $pat ) ) ) );
+                                                   "risk_alert.template",
+                                                   new java.util.LinkedList( java.util.Arrays.asList( $pat ) ) ) );
+
     ticket.getInteractions().add( new Interaction( "org.kmr2.mock.ProviderAcknowledgment",
-                                                    new java.util.LinkedList( java.util.Arrays.asList( $pro, "eafry" ) ) ) );
+                                                   "risk_alert_prov.template",
+                                                   new java.util.LinkedList( java.util.Arrays.asList( $pro, "eafry" ) ) ) );
     insert( ticket );
 end
 
@@ -101,26 +102,28 @@ when
                                  $inters : interactions,
                                  $source : source  )
     $convo  : TicketActor( $convoId, $ticketId, $actorId ; )
-    ?conversationForms( $ticketId, $actorId, $list ; )
+    ?conversationForms( $ticketId, $actorId, $formIds, $bodies ; )
               RiskValue( $value, $model ; ) from $source
     ?patientName( $pat ; )
     ?userName( $pro ; )
 then
-    System.out.println( " ******************************* Deliver to " + $actorId + "  : >> " + $list + " in " + $convo );
+    System.out.println( " ******************************* Deliver to " + $actorId + "  : >> " + $formIds + " in " + $convo );
 //    SynchronousRequestHelper helper = new SynchronousRequestHelper( new java.net.URL("TODO NEED THE EXACT URL") );
 
-
-    java.util.Map vars = new java.util.HashMap(10);
+    String body = "";
+    for ( int j = 0; j < $formIds.size(); j ++ ) {
+        java.util.Map vars = new java.util.HashMap(10);
         vars.put("title", $model );
         vars.put("patient", $pat );
         vars.put("disease", $model );
         vars.put("risk", 100*$value );
         vars.put("provider", $pro );
         vars.put("nonRisk", (100-100*$value) );
-        vars.put("surveyId", $list.get(0) );
+        vars.put("surveyId", $formIds.get(j) );
 
-    CompiledTemplate template = (CompiledTemplate) org.kmr2.TemplateBuilder.getRegistry().getNamedTemplate( "risk_alert.template" );
-    String body = ( TemplateRuntime.execute ( template, null, vars ).toString() );
+        CompiledTemplate template = (CompiledTemplate) org.kmr2.TemplateBuilder.getRegistry().getNamedTemplate( (String) $bodies.get(j) );
+        body += ( TemplateRuntime.execute ( template, null, vars ).toString() );
+    }
 
     java.util.LinkedHashMap map = new java.util.LinkedHashMap();
     map.put("refId", $ticketId );
@@ -142,7 +145,7 @@ then
 
 //    helper.invokeRequest("deliverMessage",args);
 end
-//
+
 
 
 

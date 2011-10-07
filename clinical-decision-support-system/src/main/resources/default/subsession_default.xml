@@ -22,7 +22,7 @@
         <resource type="CHANGE_SET" source="classpath:org/drools/informer/informer-changeset.xml" />
 
 
-        <!--<resource type="DRL" source="classpath:declares/interaction_declares.drl" />-->
+        <resource type="DRL" source="classpath:declares/interaction_declares.drl" />
         <resource type="DRL" source="classpath:default/interaction.drl" />
 
 

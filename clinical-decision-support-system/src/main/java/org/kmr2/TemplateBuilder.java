@@ -15,7 +15,8 @@ public class TemplateBuilder {
 
     protected static final String[] NAMED_TEMPLATES = new String[] {
 
-            "templates/risk_alert.template"
+            "templates/risk_alert.template",
+            "templates/risk_alert_prov.template"
     };
 
 
