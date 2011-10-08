@@ -11,7 +11,6 @@
    targetNamespace="urn:gov:hhs:fha:nhinc:aggregator"
    xmlns:tns="urn:gov:hhs:fha:nhinc:aggregator" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" 
               xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
-              xmlns:wsp1="http://www.w3.org/ns/ws-policy"
               xmlns:fi="http://java.sun.com/xml/ns/wsit/2006/09/policy/fastinfoset/service"
               xmlns:tcp="http://java.sun.com/xml/ns/wsit/2006/09/policy/soaptcp/service">
     <documentation>Display Data Aggregator</documentation>
@@ -193,8 +192,8 @@
         </operation>
     </portType>
 
-    <binding name="DisplayDataAggregatorBindingSoap11" type="tns:DisplayDataAggregatorPortType">
-        <wsp:PolicyReference URI="#DisplayDataAggregatorBindingSoap11Policy"/>
+    <binding name="DisplayDataAggregatorBindingSoap" type="tns:DisplayDataAggregatorPortType">
+       
         <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
         <operation name="UpdateInboxStatus">
             <soap:operation soapAction="urn:UpdateInboxStatus"/>
@@ -307,25 +306,10 @@
     </binding>
 
     <service name="DisplayDataAggregator">
-        <port name="DisplayDataAggregatorPortSoap11"
-          binding="tns:DisplayDataAggregatorBindingSoap11">
+        <port name="DisplayDataAggregatorPortSoap"
+          binding="tns:DisplayDataAggregatorBindingSoap">
             <soap:address
-         location="http://localhost:${HttpDefaultPort}/DisplayDataAggregatorWeb/DisplayDataAggregator" />
+         location="http://192.168.5.47:8080/DisplayDataAggregatorWeb/DisplayDataAggregator" />
         </port>
     </service>
-    <plnk:partnerLinkType name="DisplayDataAggregator">
-    <!-- A partner link type is automatically generated when a new port type is added.
-         Partner link types are used by BPEL processes. In a BPEL process, a partner
-         link represents the interaction between the BPEL process and a partner service.
-         Each partner link is associated with a partner link type. A partner link type
-         characterizes the conversational relationship between two services. The
-         partner link type can have one or two roles.-->
-        <plnk:role name="DisplayDataAggregatorPortTypeRole"
-               portType="tns:DisplayDataAggregatorPortType"/>
-    </plnk:partnerLinkType>
-    <wsp:Policy wsu:Id="DisplayDataAggregatorBindingSoap11Policy">
-        <wsp:ExactlyOne>
-            <wsp:All/>
-        </wsp:ExactlyOne>
-    </wsp:Policy>
 </definitions>
