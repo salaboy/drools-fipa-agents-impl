@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="system">
+    <system systemId="file:/Users/salaboy/Projects/drools-fipa-agents-impl/service-clients/registry-services/src/main/resources/RegistriesService.wsdl" uri="wsdl/RegistriesService.wsdl"/>
+    <system systemId="file:/Users/salaboy/Projects/drools-fipa-agents-impl/service-clients/registry-services/src/main/resources/RegistryTypes.xsd" uri="wsdl/RegistryTypes.xsd"/>
+</catalog>

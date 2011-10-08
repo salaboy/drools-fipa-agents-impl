@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="system">
+    <system systemId="file:/Users/salaboy/Projects/drools-fipa-agents-impl/service-clients/display-data-aggregator/src/main/resources/display-data-aggregator.wsdl" uri="wsdl/display-data-aggregator.wsdl"/>
+    <system systemId="file:/Users/salaboy/Projects/drools-fipa-agents-impl/service-clients/display-data-aggregator/src/main/resources/DisplayDataAggregator.wsdl" uri="wsdl/DisplayDataAggregator.wsdl"/>
+    <system systemId="file:/Users/salaboy/Projects/drools-fipa-agents-impl/service-clients/display-data-aggregator/src/main/resources/DisplayDataAggregator.xsd" uri="wsdl/DisplayDataAggregator.xsd"/>
+</catalog>
