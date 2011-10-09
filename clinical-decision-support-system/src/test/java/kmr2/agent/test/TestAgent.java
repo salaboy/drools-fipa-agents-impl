@@ -11,9 +11,13 @@ import org.jbpm.task.Task;
 import org.jbpm.task.TaskService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.kmr2.TemplateBuilder;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.naming.NamingException;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -24,9 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.net.URL;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class TestAgent {
 
@@ -35,6 +37,9 @@ public class TestAgent {
     private static DroolsAgent mainAgent;
 
     private static MockResponseInformer mainResponseInformer;
+
+
+    private ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
 
 
     @BeforeClass
@@ -69,6 +74,229 @@ public class TestAgent {
 
 
 
+
+
+
+
+
+    private String probe( String patientId ) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        args.put("patientId", patientId);
+
+        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("probe", args) );
+        mainAgent.tell(req);
+        ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
+        return ret(ans);
+    }
+
+    private String ret(ACLMessage ans) {
+        return ((Inform) ans.getBody()).getProposition().getEncodedContent();
+    }
+
+
+    private String getSurvey( String userId, String patientId, String surveyId ) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        args.put("userId",userId);
+        args.put("patientId",patientId);
+        args.put("surveyId",surveyId);
+
+        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args));
+        mainAgent.tell(req);
+        ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
+        return ret(ans);
+    }
+
+    private void setSurvey( String userId, String patientId, String surveyId, String questionId, String value ) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        args.put("userId",userId);
+        args.put("patientId",patientId);
+        args.put("surveyId",surveyId);
+        args.put("questionId", questionId);
+        args.put("answer",value);
+
+        ACLMessage set = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
+        mainAgent.tell(set);
+    }
+
+    private void setRiskThreshold(String userId, String patientId, String modelId, String type, Integer value) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        args.clear();
+        args.put("userId",userId);
+        args.put("patientId",patientId);
+        args.put("modelId",modelId);
+        args.put("type",type);
+        args.put("threshold",value);
+        ACLMessage setThold = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setRiskThreshold", args) );
+        mainAgent.tell(setThold);
+    }
+
+    private String getModels( String userId, String patientId, List tags ) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        args.put("userId",userId);
+        args.put("patientId",patientId);
+        args.put("types", tags);
+        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getModels", args));
+        mainAgent.tell(req);
+        ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
+
+
+        return ret(ans);
+    }
+
+    private String getRiskModels( String userId, String patientId ) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        args.put("userId",userId);
+        args.put("patientId",patientId);
+        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getRiskModels", args));
+        mainAgent.tell(req);
+        ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
+
+
+        return ret(ans);
+    }
+
+    private String getRiskModesDetail(String userId, String patientId, String[] modelsIds) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+
+
+        args.put("userId", userId );
+        args.put("patientId", patientId );
+        args.put("modelIds",modelsIds );
+
+        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getRiskModelsDetail", args) );
+
+        mainAgent.tell(req);
+
+        ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
+        return ret( ans );
+    }
+
+
+    public String startDiagnosticGuideProcess( String userId, String patientId, String disease ) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+
+        args.put("userId", userId );
+        args.put("patientId", patientId );
+        args.put("disease", disease );
+        ACLMessage start = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("startDiagnosticGuideProcess", args) );
+
+        mainAgent.tell(start);
+        ACLMessage ans = mainResponseInformer.getResponses(start).get(1);
+        MessageContentEncoder.decodeBody( ans.getBody(), Encodings.XML );
+        String dxProcessId = (String) ((Inform) ans.getBody()).getProposition().getData();
+        return dxProcessId;
+    }
+
+    public String getDiagnosticProcessStatus( String userId, String patientId, String dxProcessId, boolean forceRefresh ) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        args.put("userId", userId);
+        args.put("patientId", patientId );
+        args.put("dxProcessId",dxProcessId);
+        args.put("forceRefresh",forceRefresh );
+        ACLMessage reqStatus = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getDiagnosticProcessStatus", args) );
+
+        mainAgent.tell(reqStatus);
+        ACLMessage ans2 = mainResponseInformer.getResponses(reqStatus).get(1);
+        return ret( ans2 );
+    }
+
+    public String setDiagnosticActionStatus(String userId, String patientId, String dxProcessId, String actionId, String status) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        args.clear();
+        args.put("userId", userId);
+        args.put("patientId", patientId );
+        args.put("dxProcessId",dxProcessId);
+        args.put("actionId",actionId);
+        args.put("status",status);
+
+        ACLMessage reqAction = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
+        mainAgent.tell(reqAction);
+        ACLMessage ans = mainResponseInformer.getResponses(reqAction).get(1);
+        return ret( ans ).replaceAll("<string>","").replaceAll("</string>","") ;
+
+    }
+
+    public void advanceDiagnosticProcessStatus( String userId, String patientId, String dxProcessId ) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        args.put("userId", userId);
+        args.put("patientId", patientId );
+        args.put("dxProcessId",dxProcessId);
+        ACLMessage reqStatus = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("advanceDiagnosticGuideProcess", args) );
+
+        mainAgent.tell(reqStatus);
+//           ACLMessage ans2 = mainResponseInformer.getResponses(reqStatus).get(1);
+
+    }
+
+
+    public void completeeDiagnosticProcessStatus( String userId, String patientId, String dxProcessId, String status ) {
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        args.put("userId", userId);
+        args.put("patientId", patientId );
+        args.put("dxProcessId",dxProcessId);
+        args.put("status", status);
+        ACLMessage reqStatus = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("completeDiagnosticGuideProcess", args) );
+
+        mainAgent.tell(reqStatus);
+//           ACLMessage ans2 = mainResponseInformer.getResponses(reqStatus).get(1);
+
+    }
+
+
+
+    private List<String> getModels( String xml ) {
+        return getElements( xml, "//modelId" );
+    }
+
+
+    public List<String> getElements(String xml, String xpath) {
+        try {
+            Document dox = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( new ByteArrayInputStream( xml.getBytes()) );
+            XPath finder = XPathFactory.newInstance().newXPath();
+
+            NodeList nodes = (NodeList) finder.evaluate( xpath, dox, XPathConstants.NODESET );
+            List<String> list = new ArrayList<String>();
+            for ( int j = 0; j < nodes.getLength(); j++ ) {
+                list.add(((Element) nodes.item(j)).getTextContent());
+            }
+
+            return list;
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail( e.getMessage() );
+        }
+        return Collections.emptyList();
+    }
+
+    public String getValue(String xml, String xpath) {
+        try {
+            Document dox = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( new ByteArrayInputStream( xml.getBytes()) );
+            XPath finder = XPathFactory.newInstance().newXPath();
+
+            return (String) finder.evaluate( xpath, dox, XPathConstants.STRING );
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail( e.getMessage() );
+        }
+        return null;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @Test
     public void testInform() {
         ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
@@ -83,229 +311,129 @@ public class TestAgent {
 
 
     @Test
-    public void testProbe() {
-        ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
-        Map<String,Object> args = new LinkedHashMap<String,Object>();
-            args.put("patientId","surveyPatient");
-
-        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("probe", args));
-                mainAgent.tell(req);
-                ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
-
-        System.out.println(ans.getBody());
-    }
-
-    @Test
     public void testSurvey() {
-        ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
-
-        Map<String,Object> args = new LinkedHashMap<String,Object>();
-        args.put("userId","patient1");
-        args.put("patientId","surveyPatient");
-        args.put("surveyId","123456UNIQUESURVEYID");
-
-        Collection wm = mainAgent.getInnerSession("sessionSurvey").getObjects();
-
-        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args));
-        mainAgent.tell(req);
-        ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
-
-
-        System.out.println( ans.getBody() );
+        System.out.println( getSurvey( "drX", "99990070", "123456UNIQUESURVEYID" ) );
     }
 
 
     @Test
-    public void testGetRiskModels() {
-        ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
+    public void testGetModels() {
 
-        Map<String,Object> args = new LinkedHashMap<String,Object>();
+        String diagModels = getModels("drX", "patient33", Arrays.asList("Diagnostic") );
 
+        System.out.println( diagModels );
 
-
-        args.clear();
-        args.put("userId","drX");
-        args.put("patientId","patient33");
-        args.put("modelId","MockPTSD");
-        args.put("type","Alert");
-        args.put("threshold","35");
-        ACLMessage setThold = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setRiskThreshold", args) );
-        mainAgent.tell(setThold);
-//
+        List<String> diagList = getModels( diagModels );
+        assertEquals(1, diagList.size());
+        assertTrue( diagList.containsAll( Arrays.asList("MockDiag" ) ) );
 
 
-        args.clear();
-        args.put("userId","drX");
-        args.put("patientId","patient33");
-        args.put("types", Arrays.asList("E"));
 
-        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getRiskModels", args));
-        mainAgent.tell(req);
-        ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
+        setRiskThreshold( "drX", "patient33", "MockPTSD", "Display", 35 );
 
-        System.out.println( ans.getBody() );
+        String riskModels = getRiskModels("drX", "patient33");
+
+        System.err.println( riskModels );
+
+        List<String> riskList = getModels( riskModels );
+        assertEquals( 2, riskList.size());
+        assertTrue( riskList.containsAll( Arrays.asList( "MockPTSD", "MockCold" ) ) );
+
+        assertEquals( "35", getValue( riskModels, "//modelId[.='MockPTSD']/../displayThreshold" ) );
 
     }
+
 
 
 
     @Test
     public void testGetRiskModelsDetail() {
-        ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
-        String mid = "MockPTSD";
-        String mid2 = "MockCold";
+
+        List<String> modelsIds = getElements(getRiskModels("docX", "patient33"), "//modelId");
+        String modelStats = getRiskModesDetail( "docX", "patient33", modelsIds.toArray(new String[modelsIds.size()]) );
+
+
+        String sid1 = getValue( modelStats, "//modelId[.='MockPTSD']/../surveyId" );
+        String sid2 = getValue( modelStats, "//modelId[.='MockCold']/../surveyId" );
+
+        assertNotNull( sid1 );
+        assertNotNull( sid2 );
+
+        String ptsdSurvey = getSurvey( "docX", "patient33", sid1);
+        String coldSurvey = getSurvey( "docX", "patient33", sid2);
+
+        System.out.println(ptsdSurvey);
+
+        String gender = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Gender']/../itemId" );
+        String deployments = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Deployments']/../itemId" );
+        String alcohol = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Alcohol']/../itemId" );
+        String age = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Age']/../itemId" );
+
+        String temperature = getValue( coldSurvey, "//questionName[.='MockCold_Temp']/../itemId" );
+
+        assertNotNull( gender );
+        assertNotNull( deployments );
+        assertNotNull( age );
+        assertNotNull( temperature );
+
+        setSurvey( "drX", "patient33", sid1, deployments, "1" );
+        setSurvey( "drX", "patient33", sid1, gender, "female" );
+        setSurvey( "drX", "patient33", sid1, alcohol, "yes" );
+        setSurvey( "drX", "patient33", sid1, age, "30" );
+
+        setSurvey( "drX", "patient33", sid2, temperature, "39" );
+
+        setRiskThreshold( "drX", "patient33", "MockPTSD", "Alert", 35 );
+
+
+
+        modelStats = getRiskModesDetail( "docX", "patient33", modelsIds.toArray(new String[modelsIds.size()]) );
+
+
+        System.out.println( modelStats );
+        assertEquals( "30", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
+        assertEquals( "35", getValue( modelStats, "//modelId[.='MockPTSD']/../alertThreshold" ) );
+        assertEquals( "Not Started", getValue( modelStats, "//modelId[.='MockPTSD']/../dxProcessStatus" ) );
+
+
+        assertEquals( "50", getValue( modelStats, "//modelId[.='MockCold']/../alertThreshold" ) );
+        assertEquals( "22", getValue( modelStats, "//modelId[.='MockCold']/../relativeRisk" ) );
+
+    }
+
+
+
+    @Test
+    public void testSetDiagnostic() {
+
         Map<String,Object> args = new LinkedHashMap<String,Object>();
 
+        String dxProcessId = startDiagnosticGuideProcess( "docX", "patient33", "Post Traumatic Stress Disorder");
+        assertNotNull( dxProcessId );
 
-        args.put("userId","docX");
-        args.put("patientId","patient33");
-        args.put("modelIds",new String[] {mid, mid2} );
+        String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
 
-        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getRiskModelsDetail", args) );
-
-        mainAgent.tell(req);
-
-        mainResponseInformer.getResponses(req).get(1);
-
-        Collection c=  mainAgent.getInnerSession("patient33").getObjects();
-
-        String sid = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid + "_Questionnaire", mid, Variable.v ).iterator().next().get("$id");
-        String gender = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid + "_Gender", mid, Variable.v ).iterator().next().get("$id");
-        String deployments = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid + "_Deployments", mid, Variable.v ).iterator().next().get("$id");
-        String alcohol = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid + "_Alcohol", mid, Variable.v ).iterator().next().get("$id");
-        String age = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid + "_Age", mid, Variable.v ).iterator().next().get("$id");
+        String actionId = getValue( statusXML, "//org.kmr2.decision.impl.AskAlcohol/questionnaireId" );
+        assertNotNull( actionId );
 
 
-        String sid2 = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid2 + "_Questionnaire", mid2, Variable.v ).iterator().next().get("$id");
-        String temperature = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid2 + "_Temp", mid2, Variable.v ).iterator().next().get("$id");
+        System.err.println(statusXML);
+
+        String stat1 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Started" );
+        assertEquals("Started", stat1);
+
+        String stat2 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Committed" );
+        assertEquals("Committed", stat2);
+
+        String stat3 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Complete" );
+        assertEquals("Complete", stat3);
+
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        System.out.println( statusXML );
+
+        completeeDiagnosticProcessStatus( "drX", "patient33", dxProcessId, "Complete" );
 
 
-
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid);
-        ACLMessage getS1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args) );
-
-        mainAgent.tell(getS1);
-
-
-
-
-
-
-
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid);
-        args.put("questionId",deployments);
-        args.put("answer","1");
-        ACLMessage setS2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
-        mainAgent.tell(setS2);
-
-
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid);
-        args.put("questionId",gender);
-        args.put("answer","female");
-        ACLMessage setS1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
-        mainAgent.tell(setS1);
-
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid);
-        args.put("questionId",alcohol);
-        args.put("answer","yes");
-        ACLMessage setS3 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
-        mainAgent.tell(setS3);
-
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid);
-        args.put("questionId",age);
-        args.put("answer","30");
-        ACLMessage setS4 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
-        mainAgent.tell(setS4);
-
-
-
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid2);
-        args.put("questionId",temperature);
-        args.put("answer","39");
-        ACLMessage setX1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
-        mainAgent.tell(setX1);
-
-
-
-
-
-        args.clear();
-        args.put("userId","drX");
-        args.put("patientId","patient33");
-        args.put("modelId",mid);
-        args.put("type","Alert");
-        args.put("threshold","35");
-        ACLMessage setThold = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setRiskThreshold", args) );
-        mainAgent.tell(setThold);
-
-
-
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid);
-        ACLMessage getS2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args) );
-
-        mainAgent.tell(getS2);
-
-
-
-
-        args.clear();
-        args.put("userId","docX");
-        args.put("patientId","patient33");
-        args.put("modelIds",new String[] {mid} );
-
-        ACLMessage req2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getRiskModelsDetail", args) );
-        mainAgent.tell(req2);
-
-
-
-        ACLMessage ans1 = mainResponseInformer.getResponses(req).get(1);
-        ACLMessage ans2 = mainResponseInformer.getResponses(req2).get(1);
-
-        Collection wm = mainAgent.getInnerSession("patient33").getObjects();
-        System.out.println("*********");
-
-        System.out.println( ans1.getBody().toString());
-        System.out.println("*********");
-        System.out.println( ans2.getBody().toString());
-
-        String risk = ((Inform) ans2.getBody()).getProposition().getEncodedContent();
-
-        try {
-            Document riskx = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( new ByteArrayInputStream(risk.getBytes()) );
-            XPath finder = XPathFactory.newInstance().newXPath();
-
-            String xpath1 = "//org.drools.test.RiskModelDetail/modelId[.='MockPTSD']/../relativeRisk";
-            assertEquals( "30", finder.evaluate(xpath1, riskx, XPathConstants.STRING) );
-
-            String xpath2 = "//org.drools.test.RiskModelDetail/modelId[.='MockCold']/../relativeRisk";
-            assertEquals( "22", finder.evaluate(xpath2, riskx, XPathConstants.STRING) );
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail( e.getMessage() );
-        }
 
 
     }
@@ -313,20 +441,13 @@ public class TestAgent {
 
 
 
-
-
     @Test
-       public void testProbe33() {
-           ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
-           Map<String,Object> args = new LinkedHashMap<String,Object>();
-               args.put("patientId","patient33");
+    public void testProbe() {
+        System.out.println( probe( "patient33" ) );
+    }
 
-           ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("probe", args));
-                   mainAgent.tell(req);
-                   ACLMessage ans = mainResponseInformer.getResponses(req).get(1);
 
-           System.out.println(ans.getBody());
-       }
+
 
 
 
@@ -334,211 +455,59 @@ public class TestAgent {
     @Test
     public void testDiagnostic() {
 
-        ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
-        String mid = "MockDiag";
-        String did = "MockDecision";
+
         Map<String,Object> args = new LinkedHashMap<String,Object>();
 
+        String dxProcessId = startDiagnosticGuideProcess( "docX", "patient33", "Post Traumatic Stress Disorder");
+        assertNotNull( dxProcessId );
 
-        args.clear();
-        args.put("userId", "docX");
-        args.put("patientId", "patient33" );
-//        args.put("decModelId","MockDecision");
-//        args.put("diagModelId","MockDiag");
-        args.put("disease", "Post Traumatic Stress Disorder");
-        ACLMessage start = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("startDiagnosticGuideProcess", args) );
+        String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
 
-        mainAgent.tell(start);
-        ACLMessage ans = mainResponseInformer.getResponses(start).get(1);
-        MessageContentEncoder.decodeBody( ans.getBody(), Encodings.XML );
-        String dxProcessId = (String) ((Inform) ans.getBody()).getProposition().getData();
+        String actionId = getValue( statusXML, "//org.kmr2.decision.impl.AskAlcohol/questionnaireId" );
+        assertNotNull( actionId );
 
-        Collection wm = mainAgent.getInnerSession("patient33").getObjects();
-        System.out.println("***********************************************************************************************************************");
+        System.out.println(statusXML);
 
+        String stat1 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Started" );
+        assertEquals("Started", stat1);
 
+        String survXML = getSurvey( "drX", "patient33", actionId );
+        String alcoholQid = getValue( survXML, "//questionName[.='question']/../itemId" );
 
-
-        args.clear();
-        args.put("userId", "drX");
-        args.put("patientId", "patient33" );
-        args.put("dxProcessId",dxProcessId);
-        args.put("refresh",true);
-
-
-        ACLMessage reqStatus = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getDiagnosticProcessStatus", args) );
-
-        mainAgent.tell(reqStatus);
-        ACLMessage ans2 = mainResponseInformer.getResponses(reqStatus).get(1);
-        System.out.println(ans2.getBody());
-
-        System.out.println("***********************************************************************************************************************");
-
-
-        String statusXML = ((Inform) ans2.getBody()).getProposition().getEncodedContent();
-
-        String actionId = "";
-        try {
-            Document action = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( new ByteArrayInputStream(statusXML.getBytes()) );
-            XPath finder = XPathFactory.newInstance().newXPath();
-            String xpath = "//org.kmr2.decision.impl.AskAlcohol/questionnaireId";
-            actionId = (String) finder.evaluate(xpath, action, XPathConstants.STRING);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail( e.getMessage() );
-        }
-        System.err.println(actionId);
-
-
-        args.clear();
-        args.put("userId", "drX" );
-        args.put("patientId", "patient33" );
-        args.put("dxProcessId",dxProcessId);
-        args.put("actionId",actionId);
-        args.put("status","Started");
-
-        ACLMessage reqAction1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
-        mainAgent.tell(reqAction1);
-
-
-
-
-
-        args.clear();
-        args.put("userId","patient33");
-        args.put("patientId","patient33");
-        args.put("surveyId",actionId);
-
-        ACLMessage actQuest = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args));
-        mainAgent.tell(actQuest);
-        ACLMessage ansQuest = mainResponseInformer.getResponses(actQuest).get(1);
-
-        String xml = ((Inform)ansQuest.getBody()).getProposition().getEncodedContent();
-
-
-        String alcoholQid = "";
-        try {
-            Document action = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( new ByteArrayInputStream(xml.getBytes()) );
-            XPath finder = XPathFactory.newInstance().newXPath();
-            String xpath = "//questionName[.='question']/../itemId";
-            alcoholQid = (String) finder.evaluate(xpath, action, XPathConstants.STRING);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail( e.getMessage() );
-        }
         System.err.println(alcoholQid);
 
-
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",actionId);
-        args.put("questionId",alcoholQid);
-        args.put("answer","true");
-        ACLMessage setAlchol = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
-        mainAgent.tell(setAlchol);
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        assertEquals( "false", getValue( statusXML, "//canAdvance") );
 
 
 
-        args.clear();
-        args.put("userId","patient33");
-        args.put("patientId","patient33");
-        args.put("surveyId",actionId);
+        setSurvey( "drX", "patient33", actionId, alcoholQid, "true" );
 
-        ACLMessage actQuest2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args));
-        mainAgent.tell(actQuest2);
-        ACLMessage ansQuest2 = mainResponseInformer.getResponses(actQuest2).get(1);
+        survXML = getSurvey( "drX", "patient33", actionId );
 
-        String xml2 = ((Inform)ansQuest2.getBody()).getProposition().getEncodedContent();
-        System.err.println(xml2);
+        String stat = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Complete" );
+        assertEquals( "Complete", stat );
 
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
 
-        args.clear();
-        args.put("userId", "drX" );
-        args.put("patientId", "patient33" );
-        args.put("dxProcessId",dxProcessId);
-        args.put("actionId",actionId);
-        args.put("status","Complete");
+        assertEquals( "true", getValue( statusXML, "//questionnaireId[.='"+ actionId + "']/../question" ) );
+        assertEquals( "Complete", getValue( statusXML, "//questionnaireId[.='"+ actionId + "']/../status" ) );
+        assertEquals( "Not Started", getValue( statusXML, "//org.kmr2.decision.impl.AskDeployment/status" ) );
 
 
-        ACLMessage reqAction2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setDiagnosticActionStatus", args) );
+        assertEquals( "true", getValue( statusXML, "//canAdvance") );
+        advanceDiagnosticProcessStatus( "drX", "patient33", dxProcessId );
 
-        mainAgent.tell(reqAction2);
-
-
-        args.clear();
-        args.put("userId", "drX");
-        args.put("patientId", "patient33" );
-        args.put("dxProcessId",dxProcessId);
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        assertEquals( "true", getValue( statusXML, "//canAdvance") );
 
 
-        ACLMessage next = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("advanceDiagnosticGuideProcess", args) );
+        completeeDiagnosticProcessStatus( "rdrX", "patient33", dxProcessId, "Complete" );
 
-        mainAgent.tell(next);
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
 
-        System.out.println("***********************************************************************************************************************");
-
-
-
-
-
-
-
-
-
-
-        args.clear();
-        args.put("userId", "drX" );
-        args.put("patientId", "patient33" );
-        args.put("dxProcessId",dxProcessId);
-        args.put("status","Complete");
-
-        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("completeDiagnosticGuideProcess", args) );
-
-        mainAgent.tell(req);
-
-
-
-        System.out.println("***********************************************************************************************************************");
-
-        args.clear();
-        args.put("userId", "drX" );
-        args.put("patientId", "patient33" );
-        args.put("dxProcessId",dxProcessId);
-        args.put("refresh",true);
-
-
-        ACLMessage reqStatus2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getDiagnosticProcessStatus", args) );
-
-        mainAgent.tell(reqStatus2);
-        ACLMessage ans99 = mainResponseInformer.getResponses(reqStatus2).get(1);
-        System.out.println(ans99.getBody());
-
-
-
-
-
-        Collection wm2 = mainAgent.getInnerSession("patient33").getObjects();
-        System.out.println("*********");
-        System.out.println( wm2.size() );
-
-
-        String diagXML = ((Inform)ans99.getBody()).getProposition().getEncodedContent();
-
-        try {
-            Document diag = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( new ByteArrayInputStream(diagXML.getBytes()) );
-            XPath finder = XPathFactory.newInstance().newXPath();
-
-            String xpath1 = "//org.kmr2.decision.DxDecision/diseaseProbability[.='10']/../stage";
-            assertEquals( "1", finder.evaluate(xpath1, diag, XPathConstants.STRING) );
-
-            String xpath2 = "//org.kmr2.decision.DxDecision/actions/org.kmr2.decision.impl.AskAlcohol/status[.='Complete']/../../../stage";
-            assertEquals( "0", finder.evaluate(xpath2, diag, XPathConstants.STRING) );
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail( e.getMessage() );
-        }
+        assertEquals( "1", getValue( statusXML, "//org.kmr2.decision.DxDecision/diseaseProbability[.='10']/../stage" ) );
+        assertEquals( "0", getValue( statusXML, "//org.kmr2.decision.DxDecision/actions/org.kmr2.decision.impl.AskAlcohol/status[.='Complete']/../../../stage" ) );
 
 
     }
@@ -552,121 +521,37 @@ public class TestAgent {
 
     @Test
     public void testExceedRiskThreshld() {
-        ACLMessageFactory factory = new ACLMessageFactory( Encodings.XML );
-        String mid = "MockPTSD";
-        Map<String,Object> args = new LinkedHashMap<String,Object>();
+
+        List<String> modelsIds = getElements(getRiskModels("docX", "patient33"), "//modelId");
+        String modelStats = getRiskModesDetail( "docX", "patient33", modelsIds.toArray(new String[modelsIds.size()]) );
 
 
-        args.put("userId","docX");
-        args.put("patientId","patient33");
-        args.put("modelIds",new String[] {mid} );
+        String sid1 = getValue( modelStats, "//modelId[.='MockPTSD']/../surveyId" );
+        assertNotNull( sid1 );
 
-        ACLMessage req = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getRiskModelsDetail", args) );
+        String ptsdSurvey = getSurvey( "docX", "patient33", sid1);
 
-        mainAgent.tell(req);
-        mainResponseInformer.getResponses(req).get(1);
+        System.out.println(ptsdSurvey);
 
+        String gender = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Gender']/../itemId" );
+        String deployments = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Deployments']/../itemId" );
+        String alcohol = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Alcohol']/../itemId" );
+        String age = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Age']/../itemId" );
 
-        String sid = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid + "_Questionnaire", mid, Variable.v ).iterator().next().get("$id");
-        String gender = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid + "_Gender", mid, Variable.v ).iterator().next().get("$id");
-        String deployments = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid + "_Deployments", mid, Variable.v ).iterator().next().get("$id");
-        String alcohol = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid + "_Alcohol", mid, Variable.v ).iterator().next().get("$id");
-        String age = (String) mainAgent.getInnerSession("patient33").getQueryResults("getItemId",mid + "_Age", mid, Variable.v ).iterator().next().get("$id");
+        assertNotNull( gender );
+        assertNotNull( deployments );
+        assertNotNull( age );
 
+        setSurvey( "drX", "patient33", sid1, deployments, "1" );
+        setSurvey( "drX", "patient33", sid1, gender, "female" );
+        setSurvey( "drX", "patient33", sid1, alcohol, "yes" );
+        setSurvey( "drX", "patient33", sid1, age, "30" );
 
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid);
-        args.put("questionId",deployments);
-        args.put("answer","1");
-        ACLMessage setS2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
-        mainAgent.tell(setS2);
+        modelStats = getRiskModesDetail( "docX", "patient33", modelsIds.toArray(new String[modelsIds.size()]) );
+        assertEquals( "30", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
 
 
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid);
-        args.put("questionId",gender);
-        args.put("answer","female");
-        ACLMessage setS1 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
-        mainAgent.tell(setS1);
-
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid);
-        args.put("questionId",alcohol);
-        args.put("answer","yes");
-        ACLMessage setS3 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
-        mainAgent.tell(setS3);
-
-        args.clear();
-        args.put("userId","drx");
-        args.put("patientId","patient33");
-        args.put("surveyId",sid);
-        args.put("questionId",age);
-        args.put("answer","30");
-        ACLMessage setS4 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setSurvey", args) );
-        mainAgent.tell(setS4);
-
-
-
-
-
-        args.clear();
-        args.put("userId","docX");
-        args.put("patientId","patient33");
-        args.put("modelIds",new String[] {mid} );
-
-        ACLMessage req2 = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getRiskModelsDetail", args) );
-        mainAgent.tell(req2);
-
-        ACLMessage ans2 = mainResponseInformer.getResponses(req2).get(1);
-        String risk = ((Inform) ans2.getBody()).getProposition().getEncodedContent();
-
-        try {
-            Document riskx = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse( new ByteArrayInputStream(risk.getBytes()) );
-            XPath finder = XPathFactory.newInstance().newXPath();
-
-            String xpath1 = "//org.drools.test.RiskModelDetail/modelId[.='MockPTSD']/../relativeRisk";
-            assertEquals( "30", finder.evaluate(xpath1, riskx, XPathConstants.STRING) );
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail( e.getMessage() );
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        args.clear();
-        args.put("userId","drX");
-        args.put("patientId","patient33");
-        args.put("modelId",mid);
-        args.put("type","Alert");
-        args.put("threshold","05");
-        ACLMessage setThold = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("setRiskThreshold", args) );
-        mainAgent.tell(setThold);
-
-
-        Collection wm = mainAgent.getInnerSession("patient33").getObjects();
-        System.out.println("*********");
-
-
-
-
+        setRiskThreshold( "drX", "patient33", "MockPTSD", "Alert", 05 );
 
 
 
@@ -679,35 +564,41 @@ public class TestAgent {
         Collection alerts = mainAgent.getInnerSession("patient33").getObjects( new ClassObjectFilter(alertClass) );
 
 
-
+        String patientAlertSurveyId = null;
+        String ackQuestionId = null;
         for ( Object alert : alerts ) {
 
             String formId = (String) alertType.get( alert, "formId" );
             String dest = (String) alertType.get( alert, "destination" );
 
-            args.clear();
-            args.put("userId",dest);
-            args.put("patientId","patient33");
-            args.put("surveyId",formId);
+            String form = getSurvey( dest, "patient33", formId );
+            assertNotNull( form );
 
-            ACLMessage getSrv = factory.newRequestMessage("me","you", MessageContentFactory.newActionContent("getSurvey", args) );
-            mainAgent.tell( getSrv );
-            String body = mainResponseInformer.getResponses( getSrv ).get(1).getBody().toString();
+            System.err.println(form);
 
-            assertNotNull( body );
-            System.err.println( body );
+            String type = getValue( form, "//surveyClass" );
+            if ("org.kmr2.mock.PatientAcknowledgment".equals( type ) ) {
+                System.err.println( form );
+
+                patientAlertSurveyId = getValue( form, "//org.drools.informer.presentation.SurveyGUIAdapter/itemId" );
+
+                ackQuestionId = getValue( form, "//org.drools.informer.presentation.QuestionGUIAdapter/questionName[.='ack']/../itemId" );
+
+                assertEquals( formId, patientAlertSurveyId );
+                assertNotNull(ackQuestionId);
+            }
 
         }
 
-        TaskService ts;
+
+//        setSurvey( "patient33", "patient33", patientAlertSurveyId, ackQuestionId, "accept" );
 
 
-        Collection finalFacts = mainAgent.getInnerSession("patient33").getObjects();
-
-        SynchronousRequestHelper helper;
-
-        System.out.println("*********");
     }
+
+
+
+
 
 
 
@@ -717,7 +608,7 @@ public class TestAgent {
 
 
 
-    class MockResponseInformer implements DroolsAgentResponseInformer{
+class MockResponseInformer implements DroolsAgentResponseInformer{
 
     private Map<ACLMessage,List<ACLMessage>> responses = new HashMap<ACLMessage, List<ACLMessage>>();
 

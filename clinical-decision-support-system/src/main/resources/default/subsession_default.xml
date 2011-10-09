@@ -49,7 +49,7 @@
 
         <resource type="DRL" source="classpath:services/setRiskThreshold.drl" />
         <resource type="DRL" source="classpath:services/getRiskModelsDetail.drl" />
-        <resource type="DRL" source="classpath:services/getRiskModels.drl" />
+        <resource type="DRL" source="classpath:services/getModels.drl" />
 
 
 

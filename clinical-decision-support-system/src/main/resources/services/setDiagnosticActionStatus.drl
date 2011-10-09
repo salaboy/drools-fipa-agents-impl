@@ -23,6 +23,7 @@ when
 then
     $dx.setStatus( (String) $status );
     $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    update($dx);
 end
 
 rule "Action_Request : setDiagnosticActionStatus - Started"
@@ -38,6 +39,7 @@ when
 then
     $dx.setStatus( (String) $status );
     $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    update($dx);
 end
 
 rule "Action_Request : setDiagnosticActionStatus - Committed"
@@ -53,6 +55,7 @@ when
 then
     $dx.setStatus( (String) $status );
     $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    update($dx);
 end
 
 rule "Action_Request : setDiagnosticActionStatus - Not Started"
@@ -68,6 +71,7 @@ when
 then
     $dx.setStatus( (String) $status );
     $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    update($dx);
 end
 
 

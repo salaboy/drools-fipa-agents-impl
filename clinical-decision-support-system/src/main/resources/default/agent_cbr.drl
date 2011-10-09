@@ -28,7 +28,7 @@ global ACLMessageFactory aclFactory;
 rule "TestMin"
 when
 then
-    insert( new SessionMapping("surveyPatient","sessionSurvey") );
+    insert( new SessionMapping("99990070","sessionSurvey") );
 end
 
 

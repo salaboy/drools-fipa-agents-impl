@@ -15,7 +15,8 @@ when
                 )
     $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", $steps : stages )
 then
-    System.out.println( "Stepping to " + ($steps.size()) );
+    System.out.println( "****************************************************************************************************************** ");
+    System.out.println( "******************************************************************** Stepping to " + ($steps.size()) );
     insert( new DxStep( $dx.getId(), ($steps.size()) ) );
     retract( $a );
 end

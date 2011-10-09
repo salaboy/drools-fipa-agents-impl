@@ -17,16 +17,11 @@
 <change-set xmlns='http://drools.org/drools-5.0/change-set' xmlns:xs='http://www.w3.org/2001/XMLSchema-instance'
   xs:schemaLocation='http://drools.org/drools-5.0/change-set http://anonsvn.jboss.org/repos/labs/labs/jbossrules/trunk/drools-api/src/main/resources/change-set-1.0.0.xsd'>
 	<add>
-    <resource type="DRL" source="classpath:org/drools/fipa/fipa_common.drl" />
-    <resource type="CHANGE_SET" source="classpath:org/drools/informer/informer-changeset.xml" />
+
+
+    <resource type="CHANGE_SET" source="classpath:default/subsession_default.xml" />
 
     <resource type="DRL" source="classpath:org/kmr2/mock/SurveyBean.drl" />
-
-
-
-    <resource source="classpath:services/getSurvey.drl" type="DRL" />
-    <resource source="classpath:services/setSurvey.drl" type="DRL" />
-    <resource source="classpath:services/probe.drl" type="DRL" />
     <resource type="DRL" source="classpath:test/survey_test.drl" />
 
 	</add>

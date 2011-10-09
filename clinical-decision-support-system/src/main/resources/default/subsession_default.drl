@@ -3,8 +3,6 @@ package org.kmr2.mock;
 
 import org.drools.fipa.body.content.Action;
 import org.drools.fipa.*;
-import org.drools.test.RiskThreshold;
-import org.drools.test.RiskValue;
 
 import org.drools.interaction.*;
 
@@ -20,7 +18,7 @@ import org.drools.informer.generator.FormRegistry;
 import org.drools.dssagentserver.helpers.*;
 import java.util.List;
 
-
+import org.kmr2.risk.*;
 
 
 declare PatientInfo
@@ -89,7 +87,7 @@ end
 
 rule "Clear pat"
 when
-    $act : Action( $prov : this["userId"], $pat : this["patientId"] )
+    $act : Action( $prov : this["userId"] != null, $pat : this["patientId"] )
     $pin : PatientInfo( patientName != $pat )
 then
     retract( $pin );
@@ -97,7 +95,7 @@ end
 
 rule "Clear pro"
 when
-    $act : Action( $prov : this["userId"], $pat : this["patientId"] )
+    $act : Action( $prov : this["userId"] != null, $pat : this["patientId"] )
     $pin : UserInfo( userName != $prov )
 then
     retract( $pin );
@@ -105,7 +103,7 @@ end
 
 rule "Update pat"
 when
-    $act : Action( $prov : this["userId"], $pat : this["patientId"] )
+    $act : Action( $prov : this["userId"] != null, $pat : this["patientId"] )
 then
     insert( new UserInfo( (String) $prov ) );
     insert( new PatientInfo( (String) $pat ) );

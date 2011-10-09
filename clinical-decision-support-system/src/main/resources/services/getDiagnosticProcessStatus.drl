@@ -13,7 +13,7 @@ when
                  $userId      : this["userId"],
                  $patientId   : this["patientId"],
                  $processId   : this["dxProcessId"],
-                 $refresh     : this["refresh"]
+                 $refresh     : this["forceRefresh"]
                 )
 then
     System.out.println(" GET STATUS for " + $processId );

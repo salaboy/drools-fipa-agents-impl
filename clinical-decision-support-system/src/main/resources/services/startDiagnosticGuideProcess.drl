@@ -13,6 +13,9 @@ import org.drools.pmml_4_0.PMML4Wrapper;
 
 
 
+
+
+
 rule "Action_Request : startDiagnosticGuideProcess"
 when
     $a : Action( actionName == "startDiagnosticGuideProcess",
@@ -38,6 +41,34 @@ then
 
     insert( new DxStep( dx.getId(), 0 ) );
 end
+
+
+
+rule "Action_Request : startDiagnosticGuideProcess when no model available"
+when
+    $a : Action( actionName == "startDiagnosticGuideProcess",
+                 $provId      : this["userId"],
+                 $patientId   : this["patientId "],
+                 $disease     : this["disease"]
+                )
+    not InternalResource( $diagModelId : name, description == $disease, tags contains "Diagnostic" )
+    not InternalResource( $decModelId  : name, description == $disease, tags contains "Decision" )
+    not  DiagnosticGuideProcess( status != "Complete" )
+then
+    DiagnosticGuideProcess dx = new DiagnosticGuideProcess();
+        dx.setId( java.util.UUID.randomUUID().toString() );
+        dx.setStatus( "Started" );
+        dx.setDisease( (String) $disease );
+        dx.setStages( new java.util.LinkedList() );
+        dx.setActions( new java.util.HashSet() );
+    insert( dx );
+
+    insert( new DxStep( dx.getId(), 0 ) );
+end
+
+
+
+
 
 
 rule "Action_Request : startDiagnosticGuideProcess Clean"
@@ -78,5 +109,5 @@ end
 
 
 query startDiagnosticGuideProcess( String $userId, String $patientId, String $disease, String $return )
-    DiagnosticGuideProcess( disease == $disease, $return := id )
+    DiagnosticGuideProcess( disease == $disease, $return := id, status == "Started" )
 end

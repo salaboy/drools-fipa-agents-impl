@@ -31,10 +31,24 @@ declare ModelList
 end
 
 
+
 rule "Action_Request : getRiskModels Init"
 salience 10
 when
     $a :  Action( actionName == "getRiskModels",
+                  $userId    : this["userId"],
+                  $patientId : this["patientId"]
+                )
+    not   ModelList( $patientId, $tags == ["Risk"]; )
+then
+    insert( new ModelList( (String) $patientId, new ArrayList( java.util.Arrays.asList("Risk") ), null, true, "(ok)" ) );
+end
+
+
+rule "Action_Request : getModels Init"
+salience 10
+when
+    $a :  Action( actionName == "getModels",
                   $userId    : this["userId"],
                   $tags      : this["types"],
                   $patientId : this["patientId"]
@@ -44,13 +58,12 @@ then
     insert( new ModelList( (String) $patientId, new ArrayList( (List) $tags ), null, true, "(ok)" ) );
 end
 
-rule "Action_Request : getRiskModels Clear"
+
+
+
+rule "Action_Request : getModels Clear"
 when
-    $a :  Action( actionName == "getRiskModels",
-                  $userId    : this["userId"],
-                  $tags      : this["types"],
-                  $patientId : this["patientId"]
-                )
+    $a :  Action( actionName == "getModels" || == "getRiskModels" )
 then
     retract( $a );
 end
@@ -88,9 +101,18 @@ then
 end
 
 
-query getRiskModels( String $userId, String $patientId, List $types, Object $return )
-    $return := ModelList( patientId == $patientId )
+query getModels( String $userId, String $patientId, List $types, Object $return )
+    $return := ModelList( patientId == $patientId, tags == $types )
+end
+
+query getRiskModels( String $userId, String $patientId, Object $return )
+    $return := ModelList( patientId == $patientId, tags == ["Risk"] )
 end
 
 
-
+rule "LogMDL"
+when
+    $m : ModelList()
+then
+    System.out.println(">>>>" + $m);
+end

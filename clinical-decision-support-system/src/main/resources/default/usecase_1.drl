@@ -3,8 +3,8 @@ package org.kmr2.mock;
 
 import org.drools.fipa.body.content.Action;
 import org.drools.fipa.*;
-import org.drools.test.RiskThreshold;
-import org.drools.test.RiskValue;
+
+import org.kmr2.risk.*;
 
 import org.drools.interaction.*;
 
@@ -20,6 +20,8 @@ import org.mvel2.templates.*;
 
 import org.drools.dssagentserver.helpers.*;
 import java.util.List;
+
+import org.drools.informer.ProgressStatus;
 
 
 
@@ -102,7 +104,7 @@ when
                                  $inters : interactions,
                                  $source : source  )
     $convo  : TicketActor( $convoId, $ticketId, $actorId ; )
-    ?conversationForms( $ticketId, $actorId, $formIds, $bodies ; )
+    conversationForms( $ticketId, $actorId, $formIds, $bodies ; )
               RiskValue( $value, $model ; ) from $source
     ?patientName( $pat ; )
     ?userName( $pro ; )
@@ -140,8 +142,6 @@ then
     map.put("deliveryDate", new java.util.Date() );
     map.put("status", "New" );                 // [ "New" | "Read" | "Unread" | "Escalated" | ... ]
 
-    System.out.println( map );
-
 
 //    helper.invokeRequest("deliverMessage",args);
 end
@@ -149,6 +149,54 @@ end
 
 
 
+
+
+rule "Update state"
+salience -200
+when
+    $ticket : InteractionTicket( $ticketId : id,
+                                 $inters : interactions,
+                                 $source : source  )
+    $convo  : TicketActor( $convoId, $ticketId, $actorId ; )
+    conversationForms( $ticketId, $actorId, $formIds, $bodies ; )
+
+then
+//    System.out.println( " ******************************* On progressStatus to " + $actorId + "  : >> " + $formIds + " in " + $convo + " ////  " + $p );
+//    SynchronousRequestHelper helper = new SynchronousRequestHelper( new java.net.URL("TODO NEED THE EXACT URL") );
+//
+//    String body = "";
+//    for ( int j = 0; j < $formIds.size(); j ++ ) {
+//        java.util.Map vars = new java.util.HashMap(10);
+//        vars.put("title", $model );
+//        vars.put("patient", $pat );
+//        vars.put("disease", $model );
+//        vars.put("risk", 100*$value );
+//        vars.put("provider", $pro );
+//        vars.put("nonRisk", (100-100*$value) );
+//        vars.put("surveyId", $formIds.get(j) );
+//
+//        CompiledTemplate template = (CompiledTemplate) org.kmr2.TemplateBuilder.getRegistry().getNamedTemplate( (String) $bodies.get(j) );
+//        body += ( TemplateRuntime.execute ( template, null, vars ).toString() );
+//    }
+//
+//    java.util.LinkedHashMap map = new java.util.LinkedHashMap();
+//    map.put("refId", $ticketId );
+//    map.put("conversationId", $convoId );
+//    map.put("subjectAbout", new String[] { $pat, $pro } );          // Array of ids, current alert creation will grab the first id as the ptUnitNumber.
+//    map.put("sender", $pro );                // id
+//    map.put("mainRecipients", new String[] { $actorId } );         // Array of Ids
+//    map.put("secondaryRecipients", new String[0] );    // Array of Ids
+//    map.put("hiddenRecipients", new String[0] );       // Array of Ids
+//    map.put("type", "ALERT" );
+//    map.put("header", "Risk threshold exceeded : " + $model );
+//    map.put("body", body );
+//    map.put("priority", "Critical" );
+//    map.put("deliveryDate", new java.util.Date() );
+//    map.put("status", "New" );                 // [ "New" | "Read" | "Unread" | "Escalated" | ... ]
+//
+
+//    helper.invokeRequest("deliverMessage",args);
+end
 
 
 

@@ -171,11 +171,44 @@ when
     $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, $num : stages.size(), status != "Complete" )
     $x      : DxStep( dxProcessId == $id, stage > 0, stage == $num )
     $prev   : DxDecision( this memberOf $steps, current == true, $acts : actions )
-    $act    : DxAction() from $acts
+    $act    : DxAction( ) from $acts
+//    $tkt    : InteractionTicket( id == $formId )
 then
     System.out.println( "Killing orphan " + $act );
     retract( $act );
+//    retract( $tkt );
 end
+
+
+
+rule "Close last step"
+salience 10
+when
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, status == "Complete" )
+    $prev   : DxDecision( this memberOf $steps, current == true )
+then
+    System.out.println( "Closing LASR" + $prev );
+    $prev.setCurrent( false );
+    retract( $prev );
+end
+
+rule "Close last step II"
+salience 15
+when
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, status == "Complete" )
+    $prev   : DxDecision( this memberOf $steps, current == true, $acts : actions )
+    $act    : DxAction( $formId : questionnaireId ) from $acts
+//    $tkt    : InteractionTicket( id == $formId )
+then
+    System.out.println( "Killing LAST orphan " + $act );
+    retract( $act );
+//    retract( $tkt );
+end
+
+
+
+
+
 
 
 
@@ -214,9 +247,10 @@ end
 
 
 rule "Initialize action forms"
-salience 9999
+salience -100
 when
     DroolsQuery( name == "ticket", $args : elements )
+    not InteractionTicket( id == $args[1] )
 then
     String ticketId = $args[1].toString();
     InteractionTicket ticket = new InteractionTicket( ticketId,
@@ -230,9 +264,10 @@ end
 
 
 rule "Clone Actions"
+salience -5
 no-loop
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $acts : actions, actions.size() > 0, $steps : stages )
+    $dx     : DiagnosticGuideProcess( $id : id, $acts : actions, actions.size() > 0, $steps : stages, status != "Complete" )
     $x      : DxStep( dxProcessId == $id, $n : stage )
     $step   : DxDecision( stage == $n, this memberOf $steps, $childz : actions, current == true )
     $class  : Class( $className : name ) from $acts
@@ -240,11 +275,8 @@ when
     $tid    : String() from java.util.UUID.randomUUID().toString()
               ticket( $className, $tid, $ticket ; )
               formMarker( $tid, $className, $formId ; )
-              //getAction( $formId, $act ; )
               $act : DxAction( questionnaireId == $formId, utility < 0.0 )
-//              not DxAction( this memberOf $childz, class == $act.class )
               ?isUseful( $act, $util ; )
-//              getForm( $formId, $form ; )
 then
     System.out.println( "Configuring action ");
         $act.setUtility( $util );
@@ -258,10 +290,10 @@ end
 
 rule "Synch IDs"
 when
-    $act : DxAction( $qid : questionnaireId )
-    Questionnaire( id == $qid, $nq : availableItems.size() )
+    $act : DxAction( $qid : questionnaireId, $currNq : numQuestions )
+    Questionnaire( id == $qid, $nq : numAvailableItems != $currNq )
 then
-    System.out.println( "Set action n. questions" );
+    System.out.println( "Set action n. questions to" + $nq );
     $act.setNumQuestions( $nq );
 end
 

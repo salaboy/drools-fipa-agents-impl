@@ -1,12 +1,12 @@
 
-package org.drools.test;
+package org.kmr2.risk;
 
 import java.util.List;
 
 
 declare GetRiskModelsDetail
-    userId              : String
-    patientId           : String
+//    userId              : String
+//    patientId           : String
     modelIds            : List
     riskModels          : List
     successStatus       : boolean       = false
