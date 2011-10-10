@@ -14,7 +14,7 @@ when
                   $dxProcessId : this["dxProcessId"],
                   $status      : this["status"] == "Complete"
                 )
-    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", $steps : stages )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", $steps : diagnosticProcessHistory )
 then
     $dx.setStatus( "Complete" );
     update($dx);

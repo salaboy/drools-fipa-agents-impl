@@ -34,6 +34,7 @@ declare Interaction
     type            : String
     bodyTemplateId  : String
     receivers       : List      // <String>
+    channels        : List
 end
 
 
@@ -49,6 +50,7 @@ declare Alert
     destination     : String
     formId          : String
     bodyTemplateId  : String
+    channel         : String
 end
 
 
@@ -68,11 +70,27 @@ query ticket( String $className, String $formId, InteractionTicket $ticket )
 end
 
 
-query conversationForms( String $ticketId, String $actorId, List $formIds, List $bodies )
+query conversationForms( String $ticketId, String $actorId, List $formIds, List $bodies, List $channels )
     accumulate (
-                 Alert( $ticketId, $actorId, $formId, $body ; ),
-                 $formIds : collectList( $formId ),
-                 $bodies  : collectList( $body )
+                 Alert( $ticketId, $actorId, $formId, $body, $channel; ),
+                 $formIds  : collectList( $formId ),
+                 $bodies   : collectList( $body ),
+                 $channels : collectList( $channel )
                )
 end
+
+//query conversationForms( String $ticketId, String $actorId, List $formIds, List $bodies, List $channels )
+//    $formIds := List ( size > 0 ) from accumulate (
+//                 Alert( $ticketId, $actorId, $formId, $body, $channel ; )
+//                 collectList( $formId )
+//               )
+//    $bodies  := List ( size > 0 ) from accumulate (
+//                 Alert( $ticketId, $actorId, $formId, $body ; )
+//                 collectList( $body )
+//               )
+//    $bodies  := List ( size > 0 ) from accumulate (
+//                 Alert( $ticketId, $actorId, $formId, $body ; )
+//                 collectList( $body )
+//               )
+//end
 

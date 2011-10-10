@@ -62,7 +62,7 @@ end
 
 rule "Execute_AskAlcohol I"
 when
-    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : stages, status != "Complete" )
+    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : diagnosticProcessHistory, status != "Complete" )
     DxDecision( this memberOf $steps, current == true, $acts : actions )
     AskAlcohol( question == "true", this memberOf $acts )
     ModelMarker( modelName == $dm )
@@ -74,7 +74,7 @@ end
 
 rule "Execute_AskAlcohol II"
 when
-    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : stages, status != "Complete" )
+    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : diagnosticProcessHistory, status != "Complete" )
     DxDecision( this memberOf $steps, current == true, $acts : actions )
     AskAlcohol( question == "false", this memberOf $acts )
     ModelMarker( modelName == $dm )
@@ -87,7 +87,7 @@ end
 
 rule "AskAlcohol Frame axiom"
 when
-    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : stages, status != "Complete" )
+    DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : diagnosticProcessHistory, status != "Complete" )
     DxDecision( $step : stage, this memberOf $steps, current == true, $acts : actions )
     DxDecision( stage == ($step - 1), current == false, $prevs : actions ) from $steps
     $curr : AskAlcohol( $q : question, this memberOf $acts )
@@ -155,7 +155,7 @@ end
 rule "Close step"
 salience 10
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, $num : stages.size(), status != "Complete" )
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : diagnosticProcessHistory, $num : diagnosticProcessHistory.size(), status != "Complete" )
     $x      : DxStep( dxProcessId == $id, stage > 0, stage == $num )
     $prev   : DxDecision( this memberOf $steps, current == true )
 then
@@ -168,7 +168,7 @@ end
 rule "Close step II"
 salience 15
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, $num : stages.size(), status != "Complete" )
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : diagnosticProcessHistory, $num : diagnosticProcessHistory.size(), status != "Complete" )
     $x      : DxStep( dxProcessId == $id, stage > 0, stage == $num )
     $prev   : DxDecision( this memberOf $steps, current == true, $acts : actions )
     $act    : DxAction( ) from $acts
@@ -184,7 +184,7 @@ end
 rule "Close last step"
 salience 10
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, status == "Complete" )
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : diagnosticProcessHistory, status == "Complete" )
     $prev   : DxDecision( this memberOf $steps, current == true )
 then
     System.out.println( "Closing LASR" + $prev );
@@ -195,7 +195,7 @@ end
 rule "Close last step II"
 salience 15
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, status == "Complete" )
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : diagnosticProcessHistory, status == "Complete" )
     $prev   : DxDecision( this memberOf $steps, current == true, $acts : actions )
     $act    : DxAction( $formId : questionnaireId ) from $acts
 //    $tkt    : InteractionTicket( id == $formId )
@@ -221,7 +221,7 @@ end
 rule "Create step"
 no-loop
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $steps : stages, $num : stages.size(), status != "Complete" )
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : diagnosticProcessHistory, $num : diagnosticProcessHistory.size(), status != "Complete" )
     $x      : DxStep( dxProcessId == $id, stage == $num )
 then
     System.out.println( "Create step " );
@@ -257,7 +257,7 @@ then
                                                       new java.util.ArrayList(),
                                                       null );
 
-    ticket.getInteractions().add( new Interaction( $args[0].toString(), null, new java.util.ArrayList() ) );
+    ticket.getInteractions().add( new Interaction( $args[0].toString(), null, new java.util.ArrayList(), new java.util.ArrayList() ) );
     System.out.println( "Created " + ticket + " on the fly");
     insert( ticket );
 end
@@ -267,7 +267,7 @@ rule "Clone Actions"
 salience -5
 no-loop
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $acts : actions, actions.size() > 0, $steps : stages, status != "Complete" )
+    $dx     : DiagnosticGuideProcess( $id : id, $acts : actions, actions.size() > 0, $steps : diagnosticProcessHistory, status != "Complete" )
     $x      : DxStep( dxProcessId == $id, $n : stage )
     $step   : DxDecision( stage == $n, this memberOf $steps, $childz : actions, current == true )
     $class  : Class( $className : name ) from $acts
@@ -313,7 +313,7 @@ end
 rule "Update Diagnosis II"
 no-loop
 when
-    $dx     : DiagnosticGuideProcess( $id : id, $mid : diagModel, $steps : stages, status != "Complete" )
+    $dx     : DiagnosticGuideProcess( $id : id, $mid : diagModel, $steps : diagnosticProcessHistory, status != "Complete" )
     $x      : DxStep( dxProcessId == $id, $n : stage )
     $step   : DxDecision( stage == $n, this memberOf $steps, current == true, $curr : diseaseProbability )
               DiagValue( context == $mid, $val : value )

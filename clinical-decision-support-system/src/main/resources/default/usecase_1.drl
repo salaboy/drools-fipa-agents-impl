@@ -76,11 +76,13 @@ then
 
     ticket.getInteractions().add( new Interaction( "org.kmr2.mock.PatientAcknowledgment",
                                                    "risk_alert.template",
-                                                   new java.util.LinkedList( java.util.Arrays.asList( $pat ) ) ) );
+                                                   new java.util.LinkedList( java.util.Arrays.asList( $pat, "patNextOfKin" ) ),
+                                                   new java.util.LinkedList( java.util.Arrays.asList( "ALERT", "ALERT" ) ) ) );
 
     ticket.getInteractions().add( new Interaction( "org.kmr2.mock.ProviderAcknowledgment",
                                                    "risk_alert_prov.template",
-                                                   new java.util.LinkedList( java.util.Arrays.asList( $pro, "eafry" ) ) ) );
+                                                   new java.util.LinkedList( java.util.Arrays.asList( $pro, "eafry" ) ),
+                                                   new java.util.LinkedList( java.util.Arrays.asList( "ALERT", "SMS" ) ) ) );
     insert( ticket );
 end
 
@@ -104,12 +106,13 @@ when
                                  $inters : interactions,
                                  $source : source  )
     $convo  : TicketActor( $convoId, $ticketId, $actorId ; )
-    conversationForms( $ticketId, $actorId, $formIds, $bodies ; )
+    conversationForms( $ticketId, $actorId, $formIds, $bodies, $channels ; )
+              eval( $formIds.size() > 0 )
               RiskValue( $value, $model ; ) from $source
     ?patientName( $pat ; )
     ?userName( $pro ; )
 then
-    System.out.println( " ******************************* Deliver to " + $actorId + "  : >> " + $formIds + " in " + $convo );
+    System.out.println( " ******************************* Deliver to " + $actorId + "  : >> " + $formIds + " in " + $convo + " using " + $channels.get(0) );
 //    SynchronousRequestHelper helper = new SynchronousRequestHelper( new java.net.URL("TODO NEED THE EXACT URL") );
 
     String body = "";
@@ -135,7 +138,7 @@ then
     map.put("mainRecipients", new String[] { $actorId } );         // Array of Ids
     map.put("secondaryRecipients", new String[0] );    // Array of Ids
     map.put("hiddenRecipients", new String[0] );       // Array of Ids
-    map.put("type", "ALERT" );
+    map.put("type", $channels.get(0) );
     map.put("header", "Risk threshold exceeded : " + $model );
     map.put("body", body );
     map.put("priority", "Critical" );
@@ -159,41 +162,34 @@ when
                                  $source : source  )
     $convo  : TicketActor( $convoId, $ticketId, $actorId ; )
     conversationForms( $ticketId, $actorId, $formIds, $bodies ; )
-
+    List( $numComplete : size > 0 ) from accumulate (
+            $p : ProgressStatus( formId memberOf $formIds, $x : percentage == 100 )
+            collectList( $p )
+        )
+    ?patientName( $pat ; )
+    ?userName( $pro ; )
 then
-//    System.out.println( " ******************************* On progressStatus to " + $actorId + "  : >> " + $formIds + " in " + $convo + " ////  " + $p );
+    int ratio = 100 * $numComplete / $formIds.size();
+    System.out.println( " ******************************* On progressStatus to " + $actorId + "  : >> " + $formIds + " in " + $convo + " ////  " +  ratio );
 //    SynchronousRequestHelper helper = new SynchronousRequestHelper( new java.net.URL("TODO NEED THE EXACT URL") );
 //
-//    String body = "";
-//    for ( int j = 0; j < $formIds.size(); j ++ ) {
-//        java.util.Map vars = new java.util.HashMap(10);
-//        vars.put("title", $model );
-//        vars.put("patient", $pat );
-//        vars.put("disease", $model );
-//        vars.put("risk", 100*$value );
-//        vars.put("provider", $pro );
-//        vars.put("nonRisk", (100-100*$value) );
-//        vars.put("surveyId", $formIds.get(j) );
 //
-//        CompiledTemplate template = (CompiledTemplate) org.kmr2.TemplateBuilder.getRegistry().getNamedTemplate( (String) $bodies.get(j) );
-//        body += ( TemplateRuntime.execute ( template, null, vars ).toString() );
-//    }
-//
-//    java.util.LinkedHashMap map = new java.util.LinkedHashMap();
-//    map.put("refId", $ticketId );
-//    map.put("conversationId", $convoId );
-//    map.put("subjectAbout", new String[] { $pat, $pro } );          // Array of ids, current alert creation will grab the first id as the ptUnitNumber.
-//    map.put("sender", $pro );                // id
-//    map.put("mainRecipients", new String[] { $actorId } );         // Array of Ids
-//    map.put("secondaryRecipients", new String[0] );    // Array of Ids
-//    map.put("hiddenRecipients", new String[0] );       // Array of Ids
-//    map.put("type", "ALERT" );
-//    map.put("header", "Risk threshold exceeded : " + $model );
-//    map.put("body", body );
-//    map.put("priority", "Critical" );
-//    map.put("deliveryDate", new java.util.Date() );
-//    map.put("status", "New" );                 // [ "New" | "Read" | "Unread" | "Escalated" | ... ]
-//
+    java.util.LinkedHashMap map = new java.util.LinkedHashMap();
+    map.put("refId", $ticketId );
+    map.put("conversationId", $convoId );
+    map.put("subjectAbout", new String[] { $pat, $pro } );          // Array of ids, current alert creation will grab the first id as the ptUnitNumber.
+    map.put("sender", $pro );                // id
+    map.put("mainRecipients", new String[] { $actorId } );         // Array of Ids
+    map.put("secondaryRecipients", new String[0] );    // Array of Ids
+    map.put("hiddenRecipients", new String[0] );       // Array of Ids
+    map.put("type", "UPDATE" );
+    map.put("header", null );
+    map.put("body", null );
+    map.put("priority", "Critical" );
+    map.put("deliveryDate", new java.util.Date() );
+    map.put("status", ratio );                 // [ "New" | "Read" | "Unread" | "Escalated" | ... ]
+
+    System.out.println(map);
 
 //    helper.invokeRequest("deliverMessage",args);
 end
@@ -205,6 +201,22 @@ end
 
 
 
+rule "Escalation"
+when
+    $ticket : InteractionTicket( $id : id,
+                                 $inters : interactions )
+    $inter : Interaction( $type, $body, $receivers, $channels ;)
+    FormMarker( $id, $type, $formId ; )
+    $al : Alert( $id, $dest, $formId, $channel ; destination memberOf $receivers )
+    not org.drools.informer.Progress( $formId, 100 ; this after[0,4s] $al )
+then
+    System.out.println( $dest + " did not answer " + $al );
+    retract( $al );
+    $receivers.remove( 0 );
+    $channels.remove( 0 );
+    System.out.println( " Interaction is NOW " + $inter );
+    update( $inter );
+end
 
 
 

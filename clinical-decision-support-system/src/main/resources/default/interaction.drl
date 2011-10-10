@@ -32,11 +32,11 @@ rule "Interactions"
 when
     $ticket : InteractionTicket( $ticketId : id,
                                  $inters : interactions )
-    Interaction( $type : type, this memberOf $inters, receivers.size > 0, $receiver : receivers[0], $body : bodyTemplateId )
+    Interaction( $type : type, this memberOf $inters, receivers.size > 0, $receiver : receivers[0], $body : bodyTemplateId, $channel : channels[0] )
     formMarker( $ticketId, $type, $formId ; )
 then
     System.out.println(" Form is ready " + $formId );
-    insert( new Alert( $ticketId, $receiver.toString(), $formId, $body ) );
+    insert( new Alert( $ticketId, (String) $receiver, $formId, $body, (String) $channel ) );
 end
 
 rule "System Interactions"

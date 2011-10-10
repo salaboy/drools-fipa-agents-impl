@@ -38,7 +38,7 @@ salience 10
 when
     $a  : Action( actionName == "getDiagnosticProcessStatus",
                   $dxProcessId   : this["dxProcessId"] )
-    $dx : DiagnosticGuideProcess( id == $dxProcessId, status != "Complete" && != "Cancel", $steps : stages )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status != "Complete" && != "Cancel", $steps : diagnosticProcessHistory )
           DxDecision( current == true, this memberOf $steps, $acts : actions )
           not DxAction( this memberOf $acts, status == "Started" || == "Committed" )
 then
@@ -51,7 +51,7 @@ salience 10
 when
     $a  : Action( actionName == "getDiagnosticProcessStatus",
                   $dxProcessId   : this["dxProcessId"] )
-    $dx : DiagnosticGuideProcess( id == $dxProcessId, status != "Complete" && != "Cancel", $steps : stages )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status != "Complete" && != "Cancel", $steps : diagnosticProcessHistory )
           DxDecision( current == true, this memberOf $steps, $acts : actions )
           exists( DxAction( this memberOf $acts, status == "Started" || == "Committed" ) )
 then

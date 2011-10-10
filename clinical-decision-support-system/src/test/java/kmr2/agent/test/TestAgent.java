@@ -72,6 +72,15 @@ public class TestAgent {
     }
 
 
+    private void sleep( long millis ) {
+        try {
+            Thread.sleep( millis );
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
 
 
@@ -466,8 +475,6 @@ public class TestAgent {
         String actionId = getValue( statusXML, "//org.kmr2.decision.impl.AskAlcohol/questionnaireId" );
         assertNotNull( actionId );
 
-        System.out.println(statusXML);
-
         String stat1 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Started" );
         assertEquals("Started", stat1);
 
@@ -574,11 +581,8 @@ public class TestAgent {
             String form = getSurvey( dest, "patient33", formId );
             assertNotNull( form );
 
-            System.err.println(form);
-
             String type = getValue( form, "//surveyClass" );
             if ("org.kmr2.mock.PatientAcknowledgment".equals( type ) ) {
-                System.err.println( form );
 
                 patientAlertSurveyId = getValue( form, "//org.drools.informer.presentation.SurveyGUIAdapter/itemId" );
 
@@ -591,8 +595,10 @@ public class TestAgent {
         }
 
 
-//        setSurvey( "patient33", "patient33", patientAlertSurveyId, ackQuestionId, "accept" );
+        setSurvey( "patient33", "patient33", patientAlertSurveyId, ackQuestionId, "accept" );
 
+
+        sleep(5000);
 
     }
 

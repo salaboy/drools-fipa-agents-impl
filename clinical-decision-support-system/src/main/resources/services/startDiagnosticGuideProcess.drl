@@ -35,7 +35,7 @@ then
         dx.setDisease( (String) $disease );
         dx.setDecModel( (String) $decModelId );
         dx.setDiagModel( (String) $diagModelId );
-        dx.setStages( new java.util.LinkedList() );
+        dx.setDiagnosticProcessHistory( new java.util.LinkedList() );
         dx.setActions( new java.util.HashSet() );
     insert( dx );
 
@@ -59,7 +59,7 @@ then
         dx.setId( java.util.UUID.randomUUID().toString() );
         dx.setStatus( "Started" );
         dx.setDisease( (String) $disease );
-        dx.setStages( new java.util.LinkedList() );
+        dx.setDiagnosticProcessHistory( new java.util.LinkedList() );
         dx.setActions( new java.util.HashSet() );
     insert( dx );
 
