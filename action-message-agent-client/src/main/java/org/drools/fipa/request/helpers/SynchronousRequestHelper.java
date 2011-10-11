@@ -1,4 +1,4 @@
-package org.drools.fipa.client.helpers;
+package org.drools.fipa.request.helpers;
 
 import java.net.URL;
 import org.drools.dssagentserver.SynchronousDroolsAgentServiceImpl;

@@ -8,6 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jbpm.task.HumanTaskServiceLookup;
 import org.jbpm.task.TaskService;
+import mil.navy.med.dzreg.service.RegistriesService;
+import mil.navy.med.dzreg.service.RegistriesServicePortType;
+import mil.navy.med.dzreg.types.AckType;
+import mil.navy.med.dzreg.types.PersonType;
+import mil.navy.med.dzreg.types.RegisterPersonRequestType;
+
+import java.util.Date;
+import javax.xml.ws.BindingProvider;
+
+
 global java.util.Map channels;
 
 
@@ -22,15 +32,32 @@ then
     System.out.println("SESSION #1 >>> " + $o);
 end
 
-rule "Human Task Test"
-when
-    $o : Object()
-then
-    System.out.println("HT #1 >>> " + $o);
-    TaskService taskService = HumanTaskServiceLookup.getInstance().lookup();
-    System.out.println("I've just get the Task Service = "+taskService);
+//rule "Registries Service Test"
+//when
+//    $o : Object()
+//then
+//    System.out.println("Registry Service #1 >>> " + $o);
+//    RegistriesServicePortType service = new RegistriesService().getRegistriesServicePort();
+//        RegisterPersonRequestType params = new RegisterPersonRequestType();
+//        PersonType personType = new PersonType();
+//        personType.setName("Salaboy");
+//        params.setPerson(personType);
+//        AckType ack = service.register(params);
+//        System.out.println("ACK = "+ack);
     
-end
+    
+//end
+
+//rule "Human Task Test"
+//when
+//    $o : Object()
+//then
+//    System.out.println("HT #1 >>> " + $o);
+//    TaskService taskService = HumanTaskServiceLookup.getInstance().lookup();
+//    System.out.println("I've just get the Task Service = "+taskService);
+    
+//end
+
 
 
 //Resolve Recipients
@@ -101,6 +128,27 @@ rule "Construct EMAIL Body"
     then
        System.out.println("!!!! Inserting Message ");
        insert(new EMAILMessage((String)$refId, (String)$body, (String)$header)); 
+    
+
+end
+
+rule "Construct DeliverMessage Body"
+    when
+      $action: Action(actionName == "deliverMessage",
+                        keySet contains "refId",
+                        $refId : this["refId"],
+                        keySet contains "type",
+                        $type : this["type"] == "ALERT",
+                        keySet contains "body",
+                        $body : this["body"],
+                        keySet contains "header",
+                        $header : this["header"]    
+                        )
+      not (Message(refId == $refId))                  
+                            
+    then
+       System.out.println("!!!! Inserting Alert Message ");
+       insert(new AlertMessage((String)$refId, (String)$body, (String)$header)); 
     
 
 end

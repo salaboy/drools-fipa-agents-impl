@@ -1,12 +1,10 @@
-/*
+    /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
 package org.drools.fipa;
 
 import org.drools.fipa.action.message.invokers.MockEMAILChannelInvoker;
-import org.drools.fipa.action.message.invokers.MockSMSChannelInvoker;
-import org.drools.fipa.action.message.invokers.MockIdentityChannelInvoker;
 import org.drools.fipa.action.message.Channel;
 import org.drools.fipa.body.acts.Inform;
 import java.util.Map;
@@ -17,6 +15,8 @@ import org.drools.dssagentserver.SynchronousDroolsAgentServiceImplService;
 
 import java.util.List;
 import java.util.UUID;
+import org.drools.fipa.action.message.invokers.DeliverMessageChannelInvoker;
+import org.drools.fipa.action.message.invokers.LDAPIdentityChannelInvoker;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -58,7 +58,8 @@ public class SynchronousDroolsAgentServiceServiceTest {
 
         
 
-        ACLMessage infoSMSChannel = factory.newInformMessage("me", "you", new Channel("SMS", "http://www.smsgateway.ca/sendsms.asmx"));
+        //ACLMessage infoSMSChannel = factory.newInformMessage("me", "you", new Channel("SMS", "http://www.smsgateway.ca/sendsms.asmx"));
+        ACLMessage infoSMSChannel = factory.newInformMessage("me", "you", new Channel("DeliverMessage", "http://192.168.5.47:8080/PresentationServices/DSAIntegration"));
         List<ACLMessage> answers = synchronousDroolsAgentServicePort.tell(infoSMSChannel);
         assertNotNull(answers);
         assertEquals(0, answers.size());
@@ -69,19 +70,22 @@ public class SynchronousDroolsAgentServiceServiceTest {
         assertEquals(0, answers.size());
         
         
-        ACLMessage infoIdentityChannel = factory.newInformMessage("me", "you", new Channel("IdentityResolverService", "http://webservice/identity/invoke"));
+        ACLMessage infoIdentityChannel = factory.newInformMessage("me", "you", new Channel("IdentityResolverService", "http://192.168.5.47:8080/PresentationServices/DSAIntegration"));
         answers = synchronousDroolsAgentServicePort.tell(infoIdentityChannel);
         assertNotNull(answers);
         assertEquals(0, answers.size());
         
         
-        ACLMessage infoIdentityChannelInvoker = factory.newInformMessage("me", "you", new MockIdentityChannelInvoker());
+       // ACLMessage infoIdentityChannelInvoker = factory.newInformMessage("me", "you", new MockIdentityChannelInvoker());
+         ACLMessage infoIdentityChannelInvoker = factory.newInformMessage("me", "you", new LDAPIdentityChannelInvoker());
         answers = synchronousDroolsAgentServicePort.tell(infoIdentityChannelInvoker);
         assertNotNull(answers);
         assertEquals(0, answers.size());
         
         
-        ACLMessage infoSMSChannelInvoker = factory.newInformMessage("me", "you", new MockSMSChannelInvoker());
+        //ACLMessage infoSMSChannelInvoker = factory.newInformMessage("me", "you", new MockSMSChannelInvoker());
+        ACLMessage infoSMSChannelInvoker = factory.newInformMessage("me", "you", new DeliverMessageChannelInvoker());
+        
         answers = synchronousDroolsAgentServicePort.tell(infoSMSChannelInvoker);
         assertNotNull(answers);
         assertEquals(0, answers.size());

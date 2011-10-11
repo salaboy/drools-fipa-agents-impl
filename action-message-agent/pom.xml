@@ -17,6 +17,22 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
+         <dependency>
+            <groupId>org.drools.fipa</groupId>
+            <artifactId>drools-fipa-agent-reduced-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+         <dependency>
+            <groupId>org.drools.fipa</groupId>
+            <artifactId>registry-services</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.drools.fipa</groupId>
+            <artifactId>dsa-integration-services</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.drools.fipa</groupId>
             <artifactId>human-task-helpers</artifactId>
@@ -37,6 +53,7 @@
             <groupId>org.jbpm</groupId>
             <artifactId>jbpm-human-task</artifactId>
             <version>5.2.0-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -44,6 +61,7 @@
             <version>4.8.1</version>
             <scope>test</scope>
         </dependency>
+       
     </dependencies>
     <repositories>
         <repository>
