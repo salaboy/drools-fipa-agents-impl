@@ -27,7 +27,7 @@ when
                 )
     InternalResource( $diagModelId : name, description == $disease, tags contains "Diagnostic" )
     InternalResource( $decModelId  : name, description == $disease, tags contains "Decision" )
-    not  DiagnosticGuideProcess( decModel == $decModelId, diagModel == $diagModelId, status != "Complete" )
+    not  DiagnosticGuideProcess( decModel == $decModelId, diagModel == $diagModelId, status != "Complete", disease == $disease )
 then
     DiagnosticGuideProcess dx = new DiagnosticGuideProcess();
         dx.setId( java.util.UUID.randomUUID().toString() );
@@ -53,7 +53,7 @@ when
                 )
     not InternalResource( $diagModelId : name, description == $disease, tags contains "Diagnostic" )
     not InternalResource( $decModelId  : name, description == $disease, tags contains "Decision" )
-    not  DiagnosticGuideProcess( status != "Complete" )
+    not  DiagnosticGuideProcess( status != "Complete", disease == $disease )
 then
     DiagnosticGuideProcess dx = new DiagnosticGuideProcess();
         dx.setId( java.util.UUID.randomUUID().toString() );

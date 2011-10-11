@@ -18,6 +18,6 @@
     <module>action-message-agent-client</module>
     <module>action-message-agent-model</module>
     <module>clinical-decision-support-system</module>
-    <!--module>clinical-decision-support-agent-client</module-->
+    <module>clinical-decision-support-agent-client</module>
   </modules>
 </project>

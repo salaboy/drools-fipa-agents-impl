@@ -345,10 +345,20 @@ public class TestAgent {
         System.err.println( riskModels );
 
         List<String> riskList = getModels( riskModels );
-        assertEquals( 2, riskList.size());
-        assertTrue( riskList.containsAll( Arrays.asList( "MockPTSD", "MockCold" ) ) );
+        assertEquals( 3, riskList.size());
+        assertTrue( riskList.containsAll( Arrays.asList( "MockPTSD", "MockCold", "MockDiabetes" ) ) );
 
         assertEquals( "35", getValue( riskModels, "//modelId[.='MockPTSD']/../displayThreshold" ) );
+
+
+        String enterpriseRiskModels = getModels("drX", "patient33", Arrays.asList("E", "Risk") );
+
+        System.out.println( enterpriseRiskModels );
+
+        List<String> enterpriseRiskModelsList = getModels( enterpriseRiskModels );
+        assertEquals(2, enterpriseRiskModelsList.size());
+        assertTrue( enterpriseRiskModelsList.containsAll( Arrays.asList( "MockPTSD", "MockCold" ) ) );
+
 
     }
 
@@ -602,6 +612,43 @@ public class TestAgent {
 
     }
 
+
+
+
+
+
+
+    @Test
+    public void testEmptyDiagnostic() {
+
+
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+
+        String dxProcessId = startDiagnosticGuideProcess( "docX", "patient33", "Uncommon Cold");
+        assertNotNull( dxProcessId );
+
+        String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+
+        System.err.println( statusXML );
+
+    }
+
+
+
+    @Test
+    public void testNonExistingDiagnostic() {
+
+
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+
+        String dxProcessId = startDiagnosticGuideProcess( "docX", "patient33", "Imaginary Disease");
+        System.err.println( dxProcessId );
+
+        String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+
+        System.err.println( statusXML );
+
+    }
 
 
 
