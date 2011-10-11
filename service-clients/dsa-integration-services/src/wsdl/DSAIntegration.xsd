@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="urn:gov:hhs:fha:nhinc:dsa"
+            xmlns:tns="urn:gov:hhs:fha:nhinc:dsa"
+            elementFormDefault="qualified">
+    <xsd:complexType name="DeliverMessageRequestType">
+        <xsd:sequence>
+            <xsd:element name="refId" type="xsd:string"/>
+            <xsd:element name="subject" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="sender" type="xsd:string"/>
+            <xsd:element name="mainRecipients" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="secondaryRecipients" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="hiddenRecipients" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>            
+            <xsd:element name="type" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="header" type="xsd:string"/>
+            <xsd:element name="body" type="xsd:string"/>
+            <xsd:element name="priority" type="xsd:string"/>
+            <xsd:element name="deliveryDate" type="xsd:string"/>
+            <xsd:element name="status" type="xsd:string" />
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:element name="DeliverMessageRequest" type="tns:DeliverMessageRequestType"/>
+    <xsd:complexType name="DeliverMessageResponseType">
+        <xsd:sequence>
+            <xsd:element name="status" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:element name="DeliverMessageResponse" type="tns:DeliverMessageResponseType"></xsd:element>
+    <xsd:complexType name="GetDirectoryAttributeRequestType">
+        <xsd:sequence>
+            <xsd:element name="uid" type="xsd:string"/>
+            <xsd:element name="names" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:element name="GetDirectoryAttributeRequest" type="tns:GetDirectoryAttributeRequestType"></xsd:element>
+    <xsd:complexType name="GetDirectoryAttributeResponseType">
+        <xsd:sequence>
+            <xsd:element name="values" type="xsd:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:element name="GetDirectoryAttributeResponse" type="tns:GetDirectoryAttributeResponseType"></xsd:element>
+</xsd:schema>

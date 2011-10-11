@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+  Display Data Aggregator WSDL
+-->
+<definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+   xmlns="http://schemas.xmlsoap.org/wsdl/"
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype"
+   xmlns:dda="urn:gov:hhs:fha:nhinc:dsa"
+   name="DSAIntegration"
+   targetNamespace="urn:gov:hhs:fha:nhinc:dsa"
+   xmlns:tns="urn:gov:hhs:fha:nhinc:dsa">
+    <documentation>DSA Integration</documentation>
+    <types>
+        <xsd:schema>
+            <xsd:import namespace="urn:gov:hhs:fha:nhinc:dsa"
+                schemaLocation="DSAIntegration.xsd"/>
+        </xsd:schema>
+    </types>
+    <message name="DeliverMessageRequestMessage">
+        <part name="DeliverMessageRequest"
+            element="dda:DeliverMessageRequest"/>
+    </message>
+    <message name="DeliverMessageResponseMessage">
+        <part name="DeliverMessageResponse"
+          element="dda:DeliverMessageResponse"/>
+    </message>
+    <message name="GetDirectoryAttributeRequestMessage">
+        <part name="GetDirectoryAttributeRequest" element="dda:GetDirectoryAttributeRequest"/>
+    </message>
+    <message name="GetDirectoryAttributeResponseMessage">
+        <part name="GetDirectoryAttributeResponse"
+        element="dda:GetDirectoryAttributeResponse"/>
+    </message>
+        
+    <portType name="DSAIntegrationPortType">
+        <operation name="DeliverMessage">
+            <input name="DeliverMessageRequest"
+               message="tns:DeliverMessageRequestMessage" />
+            <output name="DeliverMessageResponse"
+                message="tns:DeliverMessageResponseMessage"/>
+        </operation>
+        <operation name="GetDirectoryAttribute">
+            <input name="GetDirectoryAttributeRequest"
+               message="tns:GetDirectoryAttributeRequestMessage" />
+            <output name="GetDirectoryAttributeResponse"
+                message="tns:GetDirectoryAttributeResponseMessage"/>
+        </operation>
+    </portType>
+
+    <binding name="DSAIntegrationBindingSoap11" type="tns:DSAIntegrationPortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="DeliverMessage">
+            <soap:operation soapAction="urn:DeliverMessage"/>
+            <input name="DeliverMessageRequest">
+                <soap:body use="literal"/>
+            </input>
+            <output name="DeliverMessageResponse">
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+        <operation name="GetDirectoryAttribute">
+            <soap:operation soapAction="urn:GetDirectoryAttribute"/>
+            <input name="GetDirectoryAttributeRequest">
+                <soap:body use="literal"/>
+            </input>
+            <output name="GetDirectoryAttributeResponse">
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+    </binding>
+
+    <service name="DSAIntegration">
+        <port name="DSAIntegrationPortSoap11"
+          binding="tns:DSAIntegrationBindingSoap11">
+            <soap:address
+         location="http://localhost:${HttpDefaultPort}/PresentationServices/DSAIntegration" />
+        </port>
+    </service>
+</definitions>
