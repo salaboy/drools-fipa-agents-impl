@@ -13,9 +13,10 @@ when
                   $patientId   : this["patientId "],
                   $dxProcessId : this["dxProcessId"]
                 )
-    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", $steps : stages )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", $steps : diagnosticProcessHistory )
 then
-    System.out.println( "Stepping to " + ($steps.size()) );
+    System.out.println( "****************************************************************************************************************** ");
+    System.out.println( "******************************************************************** Stepping to " + ($steps.size()) );
     insert( new DxStep( $dx.getId(), ($steps.size()) ) );
     retract( $a );
 end

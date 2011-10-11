@@ -1,0 +1,118 @@
+package org.drools.test;
+
+import org.drools.fipa.body.content.Action;
+import org.drools.fipa.MessageContentEncoder;
+import org.drools.fipa.Encodings;
+
+
+import org.drools.io.internal.InternalResource;
+import java.util.List;
+import java.util.ArrayList;
+
+import org.drools.pmml_4_0.ModelMarker;
+
+
+
+
+declare ModelElement
+    modelId             : String    @key
+    tags                : ArrayList @key
+    title               : String
+    disease             : String
+    displayThreshold    : int
+end
+
+declare ModelList
+    patientId           : String    @key
+    tags                : ArrayList @key
+    models              : List
+    successStatus       : boolean
+    successMessage      : String
+end
+
+
+
+rule "Action_Request : getRiskModels Init"
+salience 10
+when
+    $a :  Action( actionName == "getRiskModels",
+                  $userId    : this["userId"],
+                  $patientId : this["patientId"]
+                )
+    not   ModelList( $patientId, $tags == ["Risk"]; )
+then
+    insert( new ModelList( (String) $patientId, new ArrayList( java.util.Arrays.asList("Risk") ), null, true, "(ok)" ) );
+end
+
+
+rule "Action_Request : getModels Init"
+salience 10
+when
+    $a :  Action( actionName == "getModels",
+                  $userId    : this["userId"],
+                  $tags      : this["types"],
+                  $patientId : this["patientId"]
+                )
+    not   ModelList( $patientId, $tags; )
+then
+    insert( new ModelList( (String) $patientId, new ArrayList( (List) $tags ), null, true, "(ok)" ) );
+end
+
+
+
+
+rule "Action_Request : getModels Clear"
+when
+    $a :  Action( actionName == "getModels" || == "getRiskModels" )
+then
+    retract( $a );
+end
+
+
+
+rule "Combine with threshold"
+when
+    InternalResource( $id : name, $type : description, $tags : tags  )
+    RiskThreshold( modelId == $id, type == "Display", $thold : threshold )
+then
+    insertLogical( new ModelElement( $id, new ArrayList($tags), $type, $type, $thold ) );
+end
+
+rule "Default threshold"
+when
+    InternalResource( $id : name, $type : description, $tags : tags )
+    not RiskThreshold( modelId == $id, type == "Display" )
+    ?defaultRiskThreshold( $def ; )
+then
+    insertLogical( new ModelElement( $id, new ArrayList($tags), $type, $type, $def ) );
+end
+
+
+rule "Listing"
+when
+    $ml : ModelList( $queryTags : tags )
+    $list : List( $num : size ) from accumulate (
+        $m : ModelElement( tags.containsAll($queryTags) )
+        collectList( $m )
+    )
+
+then
+    $ml.setModels( new ArrayList( $list ) );
+end
+
+
+query getModels( String $userId, String $patientId, List $types, Object $return )
+    $return := ModelList( patientId == $patientId, tags == $types )
+end
+
+query getRiskModels( String $userId, String $patientId, Object $return )
+    $return := ModelList( patientId == $patientId, tags == ["Risk"] )
+end
+
+
+rule "LogMDL"
+when
+    $m : ModelList()
+then
+    System.out.println(">>>>" + $m);
+end

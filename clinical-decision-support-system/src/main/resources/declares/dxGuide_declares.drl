@@ -15,9 +15,10 @@ declare DiagnosticGuideProcess
    decModel                 : String
    diagModel                : String
    disease                  : String
-   stages                   : java.util.LinkedList
+   diagnosticProcessHistory : java.util.LinkedList
    canAdvance               : boolean                       = false
    actions                  : java.util.HashSet
+   successStatus            : boolean                       = true
 end
 
 
@@ -49,7 +50,7 @@ declare DxAction extends Surveyable
 //    @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = "Current status : ", required = true )
 //    @AllowedAnswers( values = { "Not Started=Not Started", "Started=Started", "Committed=Committed", "Complete=Complete" } )
 
-    upDate          : String
+    statusUpdated   : String
 
 end
 
@@ -65,3 +66,12 @@ declare DiagValue
     value   : double
     context : String
 end
+
+
+
+
+
+
+
+
+

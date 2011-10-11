@@ -28,7 +28,7 @@ global ACLMessageFactory aclFactory;
 rule "TestMin"
 when
 then
-    insert( new SessionMapping("surveyPatient","sessionSurvey") );
+    insert( new SessionMapping("99990070","sessionSurvey") );
 end
 
 
@@ -47,7 +47,7 @@ rule "Route_Encoded_X"
 salience -1
 when
     $msg : ACLMessage( $msgId : id, $b : body, encoding == Encodings.XML /* , $patientId : this.inspect("$..name[0]") */ )
-    $patientId : String( this != null ) from InspectMessageHelper.inspect( $msg, "//patientId" )
+    $patientId : String( this != null && this != "" ) from InspectMessageHelper.inspect( $msg, "//patientId" )
     mapSession( $patientId , $sessionId ; )
 then
     System.err.println("Routing message " + $msgId + " to session " + $sessionId );
@@ -59,7 +59,7 @@ rule "Route_Encoded_X_map"
 salience -1
 when
     $msg : ACLMessage( $msgId : id, $b : body, encoding == Encodings.XML /* , $patientId : this.inspect("$..name[0]") */ )
-    $patientId : String( this != null ) from InspectMessageHelper.inspect( $msg, "//key[. = 'patientId']/../value" )
+    $patientId : String( this != null && this != "" ) from InspectMessageHelper.inspect( $msg, "//key[. = 'patientId']/../value" )
     mapSession( $patientId , $sessionId ; )
 then
     System.err.println("Routing message " + $msgId + " to session " + $sessionId );
@@ -67,4 +67,12 @@ then
 end
 
 
+
+// rule "Log"
+// salience 9999
+// when
+//     $o : Object()
+// then
+//     System.out.println("MIND #SX >>> " + $o);
+// end
 

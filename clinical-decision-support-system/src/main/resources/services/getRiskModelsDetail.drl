@@ -10,15 +10,18 @@ import org.drools.informer.*;
 import org.drools.informer.xml.ChangeCollector;
 import org.drools.informer.presentation.*;
 
+import org.drools.interaction.*;
+
 import org.drools.io.internal.InternalResource;
 import java.util.List;
 import java.util.ArrayList;
 
 import org.drools.pmml_4_0.ModelMarker;
 import org.drools.pmml_4_0.PMML4Field;
-
+import org.drools.pmml_4_0.PMML4Wrapper;
 
 import org.kmr2.decision.*;
+import org.kmr2.risk.*;
 
 
 
@@ -32,11 +35,24 @@ when
     not   GetRiskModelsDetail()
 then
     GetRiskModelsDetail ans = new GetRiskModelsDetail();
-        ans.setUserId( (String) $userId );
-        ans.setPatientId( (String) $patientId );
-        ans.setModelIds( java.util.Arrays.asList( (String[]) $modelIds ) );
-        ans.setRiskModels( new ArrayList() );
     insert(ans);
+end
+
+
+rule "Action_Request : getRiskModelsDetail - refresh"
+no-loop
+when
+    $a :  Action( actionName == "getRiskModelsDetail",
+                  $userId    : this["userId"],
+                  $patientId : this["patientId"],
+                  $modelIds  : this["modelIds"]
+                )
+    $g : GetRiskModelsDetail( )
+then
+    $g.setModelIds( java.util.Arrays.asList( (String[]) $modelIds ) );
+    $g.setRiskModels( new ArrayList() );
+    $g.setSuccessStatus( true );
+    update( $g );
 end
 
 
@@ -52,7 +68,10 @@ when
     not   ModelMarker( modelName == $id )
     $rs : InternalResource( name == $id )
 then
+    String defPack = PMML4Wrapper.getPack();
+    PMML4Wrapper.setPack( "org.drools.pmml_4_0.risk."+$id );
     manager.addResource( $id, $rs );
+    PMML4Wrapper.setPack( defPack );
 end
 
 
@@ -60,8 +79,8 @@ rule "Action_Request : getRiskModelsDetail - model info"
 when
     $mm   : ModelMarker( $id : modelName )
     $res  : InternalResource( name == $id, $descr : description )
-    $grmd : GetRiskModelsDetail( $details : riskModels )
-    not     RiskModelDetail( modelId == $id ) from $details
+    $grmd : GetRiskModelsDetail( $details : riskModels, modelIds contains $id )
+    not     RiskModelDetail( modelId == $id )
 then
     RiskModelDetail rmd = new RiskModelDetail();
         rmd.setModelId( $id );
@@ -70,6 +89,20 @@ then
     $grmd.getRiskModels().add( rmd );
     insert( rmd );
 end
+
+
+
+rule "Action_Request : getRiskModelsDetail - model info refresh"
+when
+    $mm   : ModelMarker( $id : modelName )
+    $res  : InternalResource( name == $id, $descr : description )
+    $grmd : GetRiskModelsDetail( $details : riskModels, modelIds contains $id )
+    $rmd  : RiskModelDetail( modelId == $id, this not memberOf $details )
+then
+    $grmd.getRiskModels().add( $rmd );
+    update( $rmd );
+end
+
 
 
 rule "Action_Request : getRiskModelsDetail - clear"
@@ -84,9 +117,9 @@ end
 
 rule "Update Risk I"
 when
-    $rmd : RiskModelDetail( $mid : modelId )
-    $fld : PMML4Field( context == $mid, name == "Risk" )
+    $fld : PMML4Field( name matches ".*Risk$"  )
 then
+    System.out.println(" DONNING A RISK VALUE " + $fld );
     RiskValue val = don( $fld, RiskValue.class, true );
 end
 
@@ -102,9 +135,10 @@ end
 rule "Threshold"
 when
     $rmd : RiskModelDetail( $mid : modelId )
-    getRiskThreshold( $mid, $value ; )
+    RiskThreshold( $mid, "Alert", $value ; )
 then
-    $rmd.setDisplayThreshold( $value );
+    System.err.println("Setting alert thold in RiskModelDetail " + $value );
+    $rmd.setAlertThreshold( $value );
 end
 
 
@@ -118,13 +152,24 @@ then
     $rmd.setSurveyId( $surveyId );
 end
 
+
 rule "Include Dx Guide"
 when
     $rmd : RiskModelDetail( $mid : modelId, $dis : disease )
-    $dxg : DiagnosticGuideProcess( disease == $dis, $id : id, $status : status )
+    $dxg : DiagnosticGuideProcess( disease == $dis, $id : id, $status : status == "Started" )
 then
     $rmd.setDxProcessId( $id );
     $rmd.setDxProcessStatus( $status );
+end
+
+rule "Clear Dx Guide"
+when
+    $rmd : RiskModelDetail( $mid : modelId, $dis : disease )
+    exists DiagnosticGuideProcess( disease == $dis, $id : id )
+    not    DiagnosticGuideProcess( disease == $dis, $id : id, $status : status != "Complete" )
+then
+    $rmd.setDxProcessId( null );
+    $rmd.setDxProcessStatus( "Complete" );
 end
 
 rule "No Dx Guide"
@@ -139,8 +184,6 @@ end
 
 
 query getRiskModelsDetail( String $userId, String $patientId, String[] $modelIds, Object $return )
-//    $grmd   :  GetRiskModelsDetail( )
-//    $return := String() from MessageContentEncoder.encode( $grmd, Encodings.XML )
     $return :=  GetRiskModelsDetail( )
 end
 

@@ -39,29 +39,6 @@ then
 end
 
 
-rule "Debug 1"
-when
-    $cx : ChangeGUIAdapter()
-then
-    System.out.println(" WARNING CGUI " + $cx );
-end
-
-rule "Debug"
-when
-    $cx : DroolsQuery( name == "setSurvey" )
-then
-    System.out.println(" WARNING QERY " + $cx );
-end
-
-rule "Debug 3"
-when
-    DroolsQuery( name == "setSurvey" )
-    $cx : ChangeGUIAdapter()
-then
-    System.out.println(" WARNING CGUI " + $cx );
-end
-
-
 
 query setSurvey( String $userId, String $pid, String $surveyId, String $questionId, String $value, ChangeGUIAdapter $return   )
     $return := ChangeGUIAdapter( itemId == $surveyId )

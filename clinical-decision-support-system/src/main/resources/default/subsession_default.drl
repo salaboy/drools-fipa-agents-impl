@@ -1,4 +1,146 @@
 
+package org.kmr2.mock;
+
+import org.drools.fipa.body.content.Action;
+import org.drools.fipa.*;
+
+import org.drools.interaction.*;
+
+import org.drools.informer.generator.Surveyable;
+
+import org.drools.informer.generator.annotations.Questionable;
+import org.drools.informer.generator.annotations.QuestionMark;
+import org.drools.informer.generator.annotations.AllowedAnswers;
+
+import org.drools.informer.generator.FormRegistry;
+
+
+import org.drools.dssagentserver.helpers.*;
+import java.util.List;
+
+import org.kmr2.risk.*;
+
+
+declare PatientInfo
+    patientName : String    @key
+end
+
+declare UserInfo
+    userName : String   @key
+end
+
+
+
+query patientName( String $pat )
+    PatientInfo( $pat := patientName )
+end
+
+
+query userName( String $pro )
+    UserInfo( $pro := userName )
+end
+
+
+
+
+
+//
+//
+//declare PatientAcknowledgment extends Surveyable
+//@Questionable( label = "Please acknowledge the above message", language = "EN" )
+//
+//    questionnaireId     : String
+//
+//    ack                 : String
+//    @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = " Do you acknowledge the content above ? ", required = false )
+//    @AllowedAnswers( values = { "accept=Accept", "reject=Reject", "hold=Hold"  } )
+//
+//end
+//
+//declare ProviderAcknowledgment extends Surveyable
+//@Questionable( label = "Please acknowledge the above message", language = "EN" )
+//
+//    questionnaireId     : String
+//
+//    ack                 : String
+//    @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = " Do you acknowledge the content above ? ", required = false )
+//    @AllowedAnswers( values = { "accept=Accept", "reject=Reject", "hold=Hold", "ignore=Ignore", "escalate=Escalate"  } )
+//
+//end
+//
+//
+//rule "Install"
+//salience 9999
+//when
+//then
+//    FormRegistry.register( PatientAcknowledgment.class );
+//    FormRegistry.register( ProviderAcknowledgment.class );
+//end
+
+
+
+
+
+
+
+
+
+rule "Clear pat"
+when
+    $act : Action( $prov : this["userId"] != null, $pat : this["patientId"] )
+    $pin : PatientInfo( patientName != $pat )
+then
+    retract( $pin );
+end
+
+rule "Clear pro"
+when
+    $act : Action( $prov : this["userId"] != null, $pat : this["patientId"] )
+    $pin : UserInfo( userName != $prov )
+then
+    retract( $pin );
+end
+
+rule "Update pat"
+when
+    $act : Action( $prov : this["userId"] != null, $pat : this["patientId"] )
+then
+    insert( new UserInfo( (String) $prov ) );
+    insert( new PatientInfo( (String) $pat ) );
+end
+
+
+//
+//rule "At risk"
+//when
+//            RiskThreshold( $ctx : modelId, $thold : threshold )
+//    $risk : RiskValue( context == $ctx, value > ($thold / 100.0) )
+//    ?patientName( $pat ; )
+//    ?userName( $pro ; )
+//then
+//    System.err.println(" AT RISK ------------ of " + $ctx + " contact " + $pat + " and " + $pro );
+//
+//    InteractionTicket ticket = new InteractionTicket( java.util.UUID.randomUUID().toString(),
+//                                                      new java.util.ArrayList(),
+//                                                      $risk );
+//
+//    System.out.println("Just created a ticket " + ticket );
+//
+//    ticket.getInteractions().add( new Interaction( "org.kmr2.mock.PatientAcknowledgment",
+//                                                    new java.util.LinkedList( java.util.Arrays.asList( $pat ) ) ) );
+//    ticket.getInteractions().add( new Interaction( "org.kmr2.mock.ProviderAcknowledgment",
+//                                                    new java.util.LinkedList( java.util.Arrays.asList( $pro, "eafry" ) ) ) );
+//    insert( ticket );
+//end
+//
+//
+//
+//
+
+
+
+
+
 
 /*
 
@@ -34,57 +176,73 @@ end
 
 
 
-//rule "Log"
+
+
+
+
+
+
+
+
+
+
+
+//rule "Dispatch"
+//salience -200
 //when
-//    $o : Object()
+//    $ticket : InteractionTicket( $ticketId : id,
+//                                 $inters : interactions,
+//                                 $source : source  )
+//    $convo  : TicketActor( $convoId, $ticketId, $actorId ; )
+//    ?conversationForms( $ticketId, $actorId, $list ; )
+//              RiskValue( $model, $value ; ) from $source
+//    ?patientName( $pat ; )
+//    ?userName( $pro ; )
 //then
-////    if ( ! $o.getClass().getPackage().getName().contains("Expect") ) {
-//    System.err.println( $o );
-////    }
-//end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//rule "Log"
-//salience 9999
-//when
-//    $o : Object()
-//then
-//    System.out.println("PATIENT #SURVEY >>> " + $o);
-//end
+//    System.out.println( " ******************************* Deliver to " + $actorId + "  : >> " + $list + " in " + $convo );
+////    SynchronousRequestHelper helper = new SynchronousRequestHelper( new java.net.URL("TODO NEED THE EXACT URL") );
 //
+//    java.util.LinkedHashMap map = new java.util.LinkedHashMap();
+//    map.put("refId", $ticketId );
+//    map.put("conversationId", $convoId );
+//    map.put("subjectAbout", new String[] { $pat, $pro } );          // Array of ids, current alert creation will grab the first id as the ptUnitNumber.
+//    map.put("sender", $pro );                // id
+//    map.put("mainRecipients", new String[] { $actorId } );         // Array of Ids
+//    map.put("secondaryRecipients", new String[0] );    // Array of Ids
+//    map.put("hiddenRecipients", new String[0] );       // Array of Ids
+//    map.put("type", "ALERT" );
+//    map.put("header", "Risk threshold exceeded : " + $model );
+//    map.put("body", "You are in trouble " + $value );
+//    map.put("priority", "Critical" );
+//    map.put("deliveryDate", new java.util.Date() );
+//    map.put("status", "New" );                 // [ "New" | "Read" | "Unread" | "Escalated" | ... ]
+//
+//    System.out.println( map );
+//
+//
+////    helper.invokeRequest("deliverMessage",args);
+//end
+////
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+
+
+
+
+
+

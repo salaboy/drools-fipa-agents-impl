@@ -22,7 +22,8 @@ when
     $dx : DxAction( questionnaireId == $actionId, status == "Started" || == "Committed" )
 then
     $dx.setStatus( (String) $status );
-    $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    $dx.setStatusUpdated( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    update($dx);
 end
 
 rule "Action_Request : setDiagnosticActionStatus - Started"
@@ -37,7 +38,8 @@ when
     $dx : DxAction( questionnaireId == $actionId, status == "Not Started" )
 then
     $dx.setStatus( (String) $status );
-    $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    $dx.setStatusUpdated( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    update($dx);
 end
 
 rule "Action_Request : setDiagnosticActionStatus - Committed"
@@ -52,7 +54,8 @@ when
     $dx : DxAction( questionnaireId == $actionId, status == "Started" )
 then
     $dx.setStatus( (String) $status );
-    $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    $dx.setStatusUpdated( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    update($dx);
 end
 
 rule "Action_Request : setDiagnosticActionStatus - Not Started"
@@ -67,7 +70,8 @@ when
     $dx : DxAction( questionnaireId == $actionId, status == "Started" )
 then
     $dx.setStatus( (String) $status );
-    $dx.setUpDate( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    $dx.setStatusUpdated( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
+    update($dx);
 end
 
 

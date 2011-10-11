@@ -1,12 +1,12 @@
 
-package org.drools.test;
+package org.kmr2.risk;
 
 import java.util.List;
 
 
 declare GetRiskModelsDetail
-    userId              : String
-    patientId           : String
+//    userId              : String
+//    patientId           : String
     modelIds            : List
     riskModels          : List
     successStatus       : boolean       = false
@@ -21,7 +21,7 @@ declare RiskModelDetail
     disease             : String
     relativeRisk        : int
     relativeRiskRange   : int
-    displayThreshold    : int
+    alertThreshold      : int
     surveyId            : String
     dxProcessId         : String
     dxProcessStatus     : String
@@ -33,3 +33,26 @@ declare RiskValue
     value   : double
     context : String
 end
+
+
+declare RiskThreshold
+    modelId     : String        @key
+    type        : String        @key      // "Alert" | "Display"
+    threshold   : int
+end
+
+
+
+query defaultRiskThreshold( Integer $def )
+    $def := Integer( ) from new Integer(50);
+end
+
+query getRiskThreshold( String $modelId, String $type, int $thold, RiskThreshold $holder )
+    $holder := RiskThreshold( $modelId, $type, $thold ; )
+    or
+    ?defaultRiskThreshold( $thold ; )
+end
+
+
+
+

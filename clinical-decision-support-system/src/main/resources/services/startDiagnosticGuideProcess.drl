@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.drools.pmml_4_0.ModelMarker;
+import org.drools.pmml_4_0.PMML4Wrapper;
+
+
+
 
 
 
@@ -17,49 +21,93 @@ when
     $a : Action( actionName == "startDiagnosticGuideProcess",
                  $provId      : this["userId"],
                  $patientId   : this["patientId "],
-                 $decModelId  : this["decModelId"],
-                 $diagModelId : this["diagModelId"]
+                 $disease     : this["disease"]
+//                 $decModelId  : this["decModelId"],
+//                 $diagModelId : this["diagModelId"]
                 )
+    InternalResource( $diagModelId : name, description == $disease, tags contains "Diagnostic" )
+    InternalResource( $decModelId  : name, description == $disease, tags contains "Decision" )
     not  DiagnosticGuideProcess( decModel == $decModelId, diagModel == $diagModelId, status != "Complete" )
 then
     DiagnosticGuideProcess dx = new DiagnosticGuideProcess();
         dx.setId( java.util.UUID.randomUUID().toString() );
         dx.setStatus( "Started" );
+        dx.setDisease( (String) $disease );
         dx.setDecModel( (String) $decModelId );
         dx.setDiagModel( (String) $diagModelId );
-        dx.setStages( new java.util.LinkedList() );
+        dx.setDiagnosticProcessHistory( new java.util.LinkedList() );
         dx.setActions( new java.util.HashSet() );
     insert( dx );
-    retract( $a );
 
     insert( new DxStep( dx.getId(), 0 ) );
 end
 
 
+
+rule "Action_Request : startDiagnosticGuideProcess when no model available"
+when
+    $a : Action( actionName == "startDiagnosticGuideProcess",
+                 $provId      : this["userId"],
+                 $patientId   : this["patientId "],
+                 $disease     : this["disease"]
+                )
+    not InternalResource( $diagModelId : name, description == $disease, tags contains "Diagnostic" )
+    not InternalResource( $decModelId  : name, description == $disease, tags contains "Decision" )
+    not  DiagnosticGuideProcess( status != "Complete" )
+then
+    DiagnosticGuideProcess dx = new DiagnosticGuideProcess();
+        dx.setId( java.util.UUID.randomUUID().toString() );
+        dx.setStatus( "Started" );
+        dx.setDisease( (String) $disease );
+        dx.setDiagnosticProcessHistory( new java.util.LinkedList() );
+        dx.setActions( new java.util.HashSet() );
+    insert( dx );
+
+    insert( new DxStep( dx.getId(), 0 ) );
+end
+
+
+
+
+
+
+rule "Action_Request : startDiagnosticGuideProcess Clean"
+salience -100
+when
+    $a : Action( actionName == "startDiagnosticGuideProcess" )
+then
+    retract( $a );
+end
+
+
+
+
 rule "Load Diagnostic Model"
 when
-    DiagnosticGuideProcess( status == "Started", $dxModel : diagModel );
+    DiagnosticGuideProcess( status == "Started", $dxModel : diagModel )
     not   ModelMarker( modelName == $dxModel )
     $rs : InternalResource( name == $dxModel )
 then
+    String defPack = PMML4Wrapper.getPack();
+    PMML4Wrapper.setPack( "org.drools.pmml_4_0.diag.ptsd" );
     manager.addResource( $dxModel, $rs );
+    PMML4Wrapper.setPack( defPack );
 end
 
 rule "Load Decision Model"
 when
-    $dx : DiagnosticGuideProcess( status == "Started", $decModel : decModel );
+    $dx : DiagnosticGuideProcess( status == "Started", $decModel : decModel )
     not   ModelMarker( modelName == $decModel )
     $rs : InternalResource( name == $decModel, $disease : description )
 then
     System.out.println(" LOADING DECISION ");
     manager.addResource( $decModel, $rs );
-    $dx.setDisease( $disease );
 end
 
 
 
 
 
-query startDiagnosticGuideProcess( String $userId, String $patientId, String $decModelId, String $diagModelId, String $return )
-    DiagnosticGuideProcess( decModel == $decModelId, diagModel == $diagModelId, $return := id )
+query startDiagnosticGuideProcess( String $userId, String $patientId, String $disease, String $return )
+    DiagnosticGuideProcess( disease == $disease, $return := id, status == "Started" )
 end

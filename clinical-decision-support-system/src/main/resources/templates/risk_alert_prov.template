@@ -1,0 +1,28 @@
+
+@declare{'riskAlert'}
+
+<h2>@{disease}</h2>
+(This is free form HTML with an optionally embedded survey)
+
+Dear @{provider},
+
+<p>
+Your patient @{patient} has a high risk of developing the disease known as @{disease}.
+The estimated rate is around @{risk}.
+</p>
+
+<p>
+They will contact you shortly.
+</p>
+
+
+@{title}:
+<p class='agentEmbed' type='survey' id='@{surveyId}' /p>
+
+<br/>
+Thank you very much, <br/>
+<p>Your Friendly Clinical Decision Support Agent</p>
+
+@end{}
+
+@includeNamed{'riskAlert'}
