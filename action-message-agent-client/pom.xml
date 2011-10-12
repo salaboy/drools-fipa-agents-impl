@@ -82,6 +82,7 @@
                                 <wsdlFile>localhost_8080/dss-agent-custom-service/service/SynchronousDroolsAgentService.wsdl</wsdlFile>
                             </wsdlFiles>
                             <wsdlLocation>http://0.0.0.0:9944/action-message-agent-service/service/SynchronousDroolsAgentService?wsdl</wsdlLocation>
+                            <!--wsdlLocation>http://184.191.173.235:8080/action-message-agent-service/service/SynchronousDroolsAgentService?wsdl</wsdlLocation-->
                             <staleFile>${project.build.directory}/jaxws/stale/SynchronousDroolsAgentService.stale</staleFile>
                         </configuration>
                     </execution>

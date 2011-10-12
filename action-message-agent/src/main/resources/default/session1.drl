@@ -138,7 +138,7 @@ rule "Construct DeliverMessage Body"
                         keySet contains "refId",
                         $refId : this["refId"],
                         keySet contains "type",
-                        $type : this["type"] == "ALERT",
+                        $type : this["type"] == "DeliverMessage",
                         keySet contains "body",
                         $body : this["body"],
                         keySet contains "header",
@@ -175,13 +175,52 @@ rule "Invoke Channel"
         $invoker.invoke($endpoint, $message);
         insert(new MessageDeliveredResponse((String)$refId));
         retract($message);
-        retract($recipient);
+        retract($action);
+        //retract($recipient);
+end
+
+rule "Invoke Channel Via DeliverMessage Service - Hack"
+    when
+        $action: Action(actionName == "deliverMessage",
+                        keySet contains "refId",
+                        $refId : this["refId"],
+                        keySet contains "conversationId",
+                        $conversationId : this["conversationId"],
+                        keySet contains "type",
+                        $type : this["type"])
+        $channel: Channel(type == $type, $endpoint: endpoint)
+        $invoker: ChannelInvoker(type == $type )
+        $recipient: Recipient(refId == $refId)
+        $message: Message(refId == $refId)
+    then
+        System.out.println("Hack- !!!! Invoking channel endpoint >>> " + $channel.getEndpoint());
+        System.out.println("Hack- !!!! Invoking channel for Recipient >>> " + $recipient);
+        $invoker.invoke($endpoint, $message);
+        insert(new MessageDeliveredResponse((String)$refId));
+        retract($message);
+        retract($action);
+        //retract($recipient);
 end
 
 
-query deliverMessage( String $refId, String $conversationId, String $subjectabout, 
-                        String $mainRecipients, String $header, String $body, 
-                        String $type, String $priority, String $status, String $return)
+//        args.put("refId", "284d7e8d-6853-46cb-bef2-3c71e565f90d");
+//        args.put("conversationId", "9571319a-dd35-459b-a337-422487d9aa8c");
+//        args.put("subjectAbout", "patient1, id1, id2, id3");
+//        args.put("sender", "patient33");
+//        args.put("mainRecipients", "id1");
+//        args.put("secondaryRecipients", "id2");
+//        args.put("hiddenRecipients", "id3");
+//        args.put("type", "UPDATE");
+//        args.put("header", "");
+//        args.put("body", "");
+//        args.put("priority", "Critical");
+//        args.put("deliveryDate", "Tue Oct 11 23:46:36 CEST 2011");
+//        args.put("status", "100");
+
+query deliverMessage( String $refId, String $conversationId, String $subjectabout, String $sender,
+                        String $mainRecipients, String $secondaryRecipients, String $hiddenRecipients, 
+                        String $type, String $header, String $body, 
+                         String $priority, String $deliveryDate, String $status, String $return)
        $return:= MessageDeliveredResponse()
 end
 
