@@ -105,9 +105,21 @@ then
 end
 
 
+declare StartReturn
+    dxProcessId     : String        @key
+    successStatus   : boolean       = true
+    successMessage  : String
+end
+
+rule "Insert result"
+when
+    DiagnosticGuideProcess( $dxProcessId : id, status == "Started" )
+then
+    insert( new StartReturn( $dxProcessId, true, "(ok)" ) );
+end
 
 
-
-query startDiagnosticGuideProcess( String $userId, String $patientId, String $disease, String $return )
-    DiagnosticGuideProcess( disease == $disease, $return := id, status == "Started" )
+query startDiagnosticGuideProcess( String $userId, String $patientId, String $disease, StartReturn $return )
+    DiagnosticGuideProcess( disease == $disease, $dxProcessId : id, status == "Started" )
+    $return := StartReturn( dxProcessId == $dxProcessId )
 end

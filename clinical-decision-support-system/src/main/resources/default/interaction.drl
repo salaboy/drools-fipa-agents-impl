@@ -24,7 +24,7 @@ when
                                  $inters : interactions )
     $inter : Interaction( /*receivers.size > 0*/ ) from $inters
 then
-    System.out.println( "Inserting interaction " + $inter + " for ticket " + $ticket );
+//    System.out.println( "Inserting interaction " + $inter + " for ticket " + $ticket );
     insertLogical( $inter );
 end
 
@@ -35,7 +35,7 @@ when
     Interaction( $type : type, this memberOf $inters, receivers.size > 0, $receiver : receivers[0], $body : bodyTemplateId, $channel : channels[0] )
     formMarker( $ticketId, $type, $formId ; )
 then
-    System.out.println(" Form is ready " + $formId );
+//    System.out.println(" Form is ready " + $formId );
     insert( new Alert( $ticketId, (String) $receiver, $formId, $body, (String) $channel ) );
 end
 
@@ -46,7 +46,7 @@ when
     Interaction( $type : type, this memberOf $inters, receivers.size == 0 )
     formMarker( $ticketId, $type, $formId ; )
 then
-    System.out.println(" Form is ready " + $formId + " of type " + $type );
+//    System.out.println(" Form is ready " + $formId + " of type " + $type );
 end
 
 
@@ -164,9 +164,9 @@ when
     DroolsQuery( name == "formMarker", $args : elements )
     not FormMarker( $args[0], $args[1] ; )
 then
-    System.out.println(" Query " + java.util.Arrays.asList($args) );
+//    System.out.println(" Query " + java.util.Arrays.asList($args) );
 
-    System.out.println(" Will create a form for " + $args[0] + " / " + $args[1] );
+//    System.out.println(" Will create a form for " + $args[0] + " / " + $args[1] );
     String formId = java.util.UUID.randomUUID().toString();
 
     ISurveyable form = FormRegistry.create( $args[1].toString(), formId );
@@ -183,7 +183,7 @@ when
     $f : FormMarker( $ticketId, $type$, $formId ; )
     not  Surveyable( questionnaireId == $formId )
 then
-    System.out.println(" Kill orphan formmarker " + $f );
+//    System.out.println(" Kill orphan formmarker " + $f );
     retract( $f );
 end
 
@@ -193,7 +193,7 @@ when
     $tkt : InteractionTicket( $id : id )
     not    FormMarker( ticketId == $id )
 then
-    System.out.println(" Kill orphan ticekt " + $tkt );
+//    System.out.println(" Kill orphan ticekt " + $tkt );
     retract( $tkt );
 end
 

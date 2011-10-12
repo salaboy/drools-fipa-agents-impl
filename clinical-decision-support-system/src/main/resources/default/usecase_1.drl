@@ -25,6 +25,15 @@ import org.drools.informer.ProgressStatus;
 
 
 
+
+
+
+
+
+
+
+
+
 declare PatientAcknowledgment extends Surveyable
 @Questionable( label = "Please acknowledge the above message", language = "EN" )
 
@@ -55,6 +64,15 @@ then
     FormRegistry.register( PatientAcknowledgment.class );
     FormRegistry.register( ProviderAcknowledgment.class );
 end
+
+
+
+
+
+
+
+
+
 
 
 
@@ -143,7 +161,9 @@ then
     map.put("body", body );
     map.put("priority", "Critical" );
     map.put("deliveryDate", new java.util.Date() );
-    map.put("status", "New" );                 // [ "New" | "Read" | "Unread" | "Escalated" | ... ]
+    map.put("status", "New" );                         // [ "New" | "Read" | "Unread" | "Escalated" | ... ]
+
+//    System.out.println(map);
 
 
 //    helper.invokeRequest("deliverMessage",args);
@@ -189,7 +209,7 @@ then
     map.put("deliveryDate", new java.util.Date() );
     map.put("status", ratio );                 // [ "New" | "Read" | "Unread" | "Escalated" | ... ]
 
-    System.out.println(map);
+//    System.out.println(map);
 
 //    helper.invokeRequest("deliverMessage",args);
 end

@@ -12,12 +12,12 @@ import org.drools.informer.presentation.*;
 
 rule "CreateSurvey"
 when
-    $ticket : SurveyTicket(
-                $id : sid
-              )
-    not SurveyBean( questionnaireId == $id )
+//    $ticket : SurveyTicket(
+//                $id : sid
+//              )
+//    not SurveyBean( questionnaireId == $id )
 then
-    SurveyBean sb = new SurveyBean( $id );
+    SurveyBean sb = new SurveyBean( "123456UNIQUESURVEYID" );
         sb.setQuestion4(44);
     insert( sb  );
     System.out.println("Created surveyt" + sb);

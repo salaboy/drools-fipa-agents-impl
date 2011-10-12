@@ -69,7 +69,7 @@
 
 
     <NeuralOutputs>
-      <NeuralOutput outputNeuron="4">
+      <NeuralOutput outputNeuron="3">
         <DerivedField dataType="double" optype="continuous">
           <FieldRef field="diabetesRisk"/>
         </DerivedField>

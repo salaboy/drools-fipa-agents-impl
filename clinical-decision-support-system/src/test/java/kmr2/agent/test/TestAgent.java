@@ -191,9 +191,10 @@ public class TestAgent {
 
         mainAgent.tell(start);
         ACLMessage ans = mainResponseInformer.getResponses(start).get(1);
-        MessageContentEncoder.decodeBody( ans.getBody(), Encodings.XML );
-        String dxProcessId = (String) ((Inform) ans.getBody()).getProposition().getData();
-        return dxProcessId;
+//        MessageContentEncoder.decodeBody( ans.getBody(), Encodings.XML );
+//        String dxProcessId = (String) ((Inform) ans.getBody()).getProposition().getData();
+//        return dxProcessId;
+        return ret(ans);
     }
 
     public String getDiagnosticProcessStatus( String userId, String patientId, String dxProcessId, boolean forceRefresh ) {
@@ -411,12 +412,14 @@ public class TestAgent {
 
         System.out.println( modelStats );
         assertEquals( "30", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
+        assertEquals( "Average", getValue( modelStats, "//modelId[.='MockPTSD']/../severity" ) );
         assertEquals( "35", getValue( modelStats, "//modelId[.='MockPTSD']/../alertThreshold" ) );
         assertEquals( "Not Started", getValue( modelStats, "//modelId[.='MockPTSD']/../dxProcessStatus" ) );
 
 
         assertEquals( "50", getValue( modelStats, "//modelId[.='MockCold']/../alertThreshold" ) );
         assertEquals( "22", getValue( modelStats, "//modelId[.='MockCold']/../relativeRisk" ) );
+        assertEquals( "Low", getValue( modelStats, "//modelId[.='MockCold']/../severity" ) );
 
     }
 
@@ -427,24 +430,30 @@ public class TestAgent {
 
         Map<String,Object> args = new LinkedHashMap<String,Object>();
 
-        String dxProcessId = startDiagnosticGuideProcess( "docX", "patient33", "Post Traumatic Stress Disorder");
+        String dxProcessReturn = startDiagnosticGuideProcess( "docX", "patient33", "Post Traumatic Stress Disorder");
+        String dxProcessId = getValue( dxProcessReturn, "//dxProcessId" );
+        System.out.println( dxProcessReturn );
+
         assertNotNull( dxProcessId );
 
         String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
 
-        String actionId = getValue( statusXML, "//org.kmr2.decision.impl.AskAlcohol/questionnaireId" );
+        String actionId = getValue( statusXML, "//org.kmr2.decision.impl.AskAlcohol/actionId" );
         assertNotNull( actionId );
 
 
         System.err.println(statusXML);
 
         String stat1 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Started" );
+        stat1 = getValue( stat1, "//actionStatus" );
         assertEquals("Started", stat1);
 
         String stat2 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Committed" );
+        stat2 = getValue( stat2, "//actionStatus" );
         assertEquals("Committed", stat2);
 
         String stat3 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Complete" );
+        stat3 = getValue( stat3, "//actionStatus" );
         assertEquals("Complete", stat3);
 
         statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
@@ -477,18 +486,26 @@ public class TestAgent {
 
         Map<String,Object> args = new LinkedHashMap<String,Object>();
 
-        String dxProcessId = startDiagnosticGuideProcess( "docX", "patient33", "Post Traumatic Stress Disorder");
+        String dxProcessReturn = startDiagnosticGuideProcess( "docX", "patient33", "Post Traumatic Stress Disorder");
+        String dxProcessId = getValue( dxProcessReturn, "//dxProcessId" );
+
+
         assertNotNull( dxProcessId );
 
         String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
 
-        String actionId = getValue( statusXML, "//org.kmr2.decision.impl.AskAlcohol/questionnaireId" );
+
+        System.err.println(statusXML);
+
+        String actionId = getValue( statusXML, "//org.kmr2.decision.impl.AskAlcohol/actionId" );
+        String actionQuestId = getValue( statusXML, "//org.kmr2.decision.impl.AskAlcohol/questionnaireId" );
         assertNotNull( actionId );
 
         String stat1 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Started" );
+        stat1 = getValue( stat1, "//actionStatus" );
         assertEquals("Started", stat1);
 
-        String survXML = getSurvey( "drX", "patient33", actionId );
+        String survXML = getSurvey( "drX", "patient33", actionQuestId );
         String alcoholQid = getValue( survXML, "//questionName[.='question']/../itemId" );
 
         System.err.println(alcoholQid);
@@ -498,17 +515,17 @@ public class TestAgent {
 
 
 
-        setSurvey( "drX", "patient33", actionId, alcoholQid, "true" );
+        setSurvey( "drX", "patient33", actionQuestId, alcoholQid, "true" );
 
-        survXML = getSurvey( "drX", "patient33", actionId );
+        survXML = getSurvey( "drX", "patient33", actionQuestId );
 
-        String stat = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Complete" );
-        assertEquals( "Complete", stat );
+//        String stat = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Complete" );
+//        assertEquals( "Complete", stat );
 
         statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
 
-        assertEquals( "true", getValue( statusXML, "//questionnaireId[.='"+ actionId + "']/../question" ) );
-        assertEquals( "Complete", getValue( statusXML, "//questionnaireId[.='"+ actionId + "']/../status" ) );
+        assertEquals( "true", getValue( statusXML, "//actionId[.='"+ actionId + "']/../question" ) );
+        assertEquals( "Complete", getValue( statusXML, "//actionId[.='"+ actionId + "']/../status" ) );
         assertEquals( "Not Started", getValue( statusXML, "//org.kmr2.decision.impl.AskDeployment/status" ) );
 
 
@@ -526,6 +543,7 @@ public class TestAgent {
         assertEquals( "1", getValue( statusXML, "//org.kmr2.decision.DxDecision/diseaseProbability[.='10']/../stage" ) );
         assertEquals( "0", getValue( statusXML, "//org.kmr2.decision.DxDecision/actions/org.kmr2.decision.impl.AskAlcohol/status[.='Complete']/../../../stage" ) );
 
+        System.err.println(statusXML);
 
     }
 
@@ -618,13 +636,95 @@ public class TestAgent {
 
 
 
+
+
+    @Test
+    public void testExceedAndReset() {
+
+        List<String> modelsIds = getElements(getRiskModels("docX", "patient33"), "//modelId");
+        String modelStats = getRiskModesDetail( "docX", "patient33", modelsIds.toArray(new String[modelsIds.size()]) );
+
+        String sid1 = getValue( modelStats, "//modelId[.='MockPTSD']/../surveyId" );
+        assertNotNull( sid1 );
+
+        String ptsdSurvey = getSurvey( "docX", "patient33", sid1);
+
+        String gender = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Gender']/../itemId" );
+        String deployments = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Deployments']/../itemId" );
+        String alcohol = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Alcohol']/../itemId" );
+        String age = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Age']/../itemId" );
+
+        assertNotNull( gender );
+        assertNotNull( deployments );
+        assertNotNull( age );
+
+        setSurvey( "drX", "patient33", sid1, deployments, "1" );
+        setSurvey( "drX", "patient33", sid1, gender, "female" );
+        setSurvey( "drX", "patient33", sid1, alcohol, "yes" );
+        setSurvey( "drX", "patient33", sid1, age, "30" );
+
+        modelStats = getRiskModesDetail( "docX", "patient33", modelsIds.toArray(new String[modelsIds.size()]) );
+        assertEquals( "30", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
+
+
+        setRiskThreshold( "drX", "patient33", "MockPTSD", "Alert", 25 );
+
+
+
+        FactType alertType = mainAgent.getInnerSession("patient33").getKnowledgeBase().getFactType("org.drools.interaction", "Alert");
+        Class alertClass = alertType.getFactClass();
+        Collection alerts = mainAgent.getInnerSession("patient33").getObjects( new ClassObjectFilter(alertClass) );
+        assertEquals( 2, alerts.size() );
+
+        sleep(10000);
+        alerts = mainAgent.getInnerSession("patient33").getObjects( new ClassObjectFilter(alertClass) );
+        assertEquals( 0, alerts.size() );
+
+
+
+        setSurvey( "drX", "patient33", sid1, age, "1" );
+
+        modelStats = getRiskModesDetail( "docX", "patient33", modelsIds.toArray(new String[modelsIds.size()]) );
+        assertEquals( "16", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
+
+
+        setSurvey( "drX", "patient33", sid1, age, "40" );
+
+        modelStats = getRiskModesDetail( "docX", "patient33", modelsIds.toArray(new String[modelsIds.size()]) );
+        assertEquals( "35", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
+
+
+        alerts = mainAgent.getInnerSession("patient33").getObjects( new ClassObjectFilter(alertClass) );
+        assertEquals( 2, alerts.size() );
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @Test
     public void testEmptyDiagnostic() {
 
 
         Map<String,Object> args = new LinkedHashMap<String,Object>();
 
-        String dxProcessId = startDiagnosticGuideProcess( "docX", "patient33", "Uncommon Cold");
+        String dxProcessReturn = startDiagnosticGuideProcess( "docX", "patient33", "Uncommon Cold");
+        String dxProcessId = getValue( dxProcessReturn, "//dxProcessId" );
         assertNotNull( dxProcessId );
 
         String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
@@ -641,7 +741,8 @@ public class TestAgent {
 
         Map<String,Object> args = new LinkedHashMap<String,Object>();
 
-        String dxProcessId = startDiagnosticGuideProcess( "docX", "patient33", "Imaginary Disease");
+        String dxProcessReturn = startDiagnosticGuideProcess( "docX", "patient33", "Imaginary Disease");
+        String dxProcessId = getValue( dxProcessReturn, "//dxProcessId" );
         System.err.println( dxProcessId );
 
         String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );

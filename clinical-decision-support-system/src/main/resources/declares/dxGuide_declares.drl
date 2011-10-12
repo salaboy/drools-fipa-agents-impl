@@ -40,7 +40,8 @@ end
 
 declare DxAction extends Surveyable
 
-    questionnaireId : String       @key
+    actionId        : String                        @key
+    questionnaireId : String
     numQuestions    : int
 
     utility         : double      = -1.0
