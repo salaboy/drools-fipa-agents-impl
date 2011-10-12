@@ -13,6 +13,7 @@ import mil.navy.med.dzreg.service.RegistriesServicePortType;
 import mil.navy.med.dzreg.types.AckType;
 import mil.navy.med.dzreg.types.PersonType;
 import mil.navy.med.dzreg.types.RegisterPersonRequestType;
+import org.drools.fipa.action.helpers.*;
 
 import java.util.Date;
 import javax.xml.ws.BindingProvider;
@@ -75,6 +76,27 @@ rule "Deliver Message Action Found"
 
         insert(new Recipient((String)$refId, (String)$mainRecipients));
 end
+
+rule "Resolve Subject About Entities"
+    when
+        $action: Action(actionName == "deliverMessage",
+                        keySet contains "refId",
+                        $refId : this["refId"],
+                        keySet contains "subjectAbout",
+                        $subjectAbout : this["subjectAbout"]
+                        )
+
+                        
+                        
+    then
+        List ldapEntities = RecipientSplitterHelper.splitRecipients((String)$subjectAbout);
+        for(Object entity : ldapEntities){
+            insert(entity);
+        }
+end
+
+
+
 
 rule "Retrieve Recipient Information"
     no-loop

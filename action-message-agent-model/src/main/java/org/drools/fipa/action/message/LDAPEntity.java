@@ -18,6 +18,11 @@ public class LDAPEntity implements Serializable{
     private String displayName;
     private String gender;
 
+    public LDAPEntity(String cn) {
+        this.cn = cn;
+    }
+
+    
     public LDAPEntity(String cn, String mobile, String employeeNumber, String displayName, String gender) {
         this.cn = cn;
         this.mobile = mobile;
