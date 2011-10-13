@@ -1,0 +1,46 @@
+package org.drools.test;
+
+import org.drools.fipa.body.content.*;
+import org.drools.fipa.action.message.*;
+import org.drools.fipa.action.message.types.*;
+import org.drools.fipa.action.message.invokers.*;
+import java.util.ArrayList;
+import java.util.List;
+import org.jbpm.task.HumanTaskServiceLookup;
+import org.jbpm.task.TaskService;
+import org.drools.fipa.action.helpers.*;
+import java.util.LinkedHashMap;
+import java.util.Date;
+import javax.xml.ws.BindingProvider;
+import org.drools.dssagentserver.helpers.*;
+import java.net.URL;
+global java.util.Map channels;
+
+
+declare MessageDeliveredResponse
+    refId : String
+end
+
+rule "Log"
+when
+    $o : Object()
+then
+    System.out.println("SESSION #1 >>> " + $o);
+end
+
+rule "Call another agent"
+    when
+        LDAPEntity()
+    then
+        
+       SynchronousRequestHelper helper =  new SynchronousRequestHelper(
+                        //new URL("http://0.0.0.0:9944/action-message-agent-service/service/SynchronousDroolsAgentService"));
+                          new URL("http://192.168.5.47:8080/action-message-agent-service/service/SynchronousDroolsAgentService"));
+
+       helper.invokeRequest( "salaboy", "action-agent", "disfuction", new LinkedHashMap() );
+end
+
+
+
+
+        

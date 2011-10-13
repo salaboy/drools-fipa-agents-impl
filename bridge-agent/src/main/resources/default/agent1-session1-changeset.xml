@@ -1,0 +1,6 @@
+<change-set xmlns='http://drools.org/drools-5.0/change-set'>
+	<add>
+            <resource type="DRL" source="classpath:org/drools/fipa/fipa_common.drl" />
+            <resource type="DRL" source="classpath:default/session1.drl" />
+	</add>
+</change-set>
