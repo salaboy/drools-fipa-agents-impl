@@ -1,4 +1,4 @@
-package org.drools.test;
+ package org.drools.test;
 
 
 
@@ -179,6 +179,44 @@ when
 then
     $rmd.setDxProcessId( null );
     $rmd.setDxProcessStatus( "Not Started" );
+end
+
+
+
+
+
+
+
+rule "Update Severity : Low"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+           RiskValue( context == $mid, $val : value <= 0.25 )
+then
+    $rmd.setSeverity( "Low" );
+end
+
+rule "Update Severity : Average"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+           RiskValue( context == $mid, $val : value > 0.25 && <= 0.50 )
+then
+    $rmd.setSeverity( "Average" );
+end
+
+rule "Update Severity : High"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+           RiskValue( context == $mid, $val : value > 0.50 && <= 0.75 )
+then
+    $rmd.setSeverity( "High" );
+end
+
+rule "Update Severity : Very High"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+           RiskValue( context == $mid, $val : value > 0.75 )
+then
+    $rmd.setSeverity( "Very High" );
 end
 
 

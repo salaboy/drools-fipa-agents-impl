@@ -3,7 +3,7 @@ package org.kmr2;
 import org.drools.builder.ResourceType;
 import org.drools.io.impl.*;
 
-rule "Init PTSD Descriptors"
+rule "Init Cold Descriptors"
 salience 999
 when
 then

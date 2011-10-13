@@ -64,7 +64,7 @@ end
 //Resolve Recipients
 rule "Deliver Message Action Found"
     when
-        $action: Action(actionName == "deliverMessage",
+        $action: Action( actionName == "deliverMessage",
                         keySet contains "refId",
                         $refId : this["refId"],
                         keySet contains "mainRecipients",
@@ -225,6 +225,18 @@ rule "Invoke Channel Via DeliverMessage Service - Hack"
 end
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 //        args.put("refId", "284d7e8d-6853-46cb-bef2-3c71e565f90d");
 //        args.put("conversationId", "9571319a-dd35-459b-a337-422487d9aa8c");
 //        args.put("subjectAbout", "patient1, id1, id2, id3");
@@ -239,10 +251,13 @@ end
 //        args.put("deliveryDate", "Tue Oct 11 23:46:36 CEST 2011");
 //        args.put("status", "100");
 
-query deliverMessage( String $refId, String $conversationId, String $subjectabout, String $sender,
-                        String $mainRecipients, String $secondaryRecipients, String $hiddenRecipients, 
-                        String $type, String $header, String $body, 
-                         String $priority, String $deliveryDate, String $status, String $return)
+query deliverMessage( String $refId, String $conversationId,
+                      String $subjectabout,
+                      String $sender, String $mainRecipients, String $secondaryRecipients, String $hiddenRecipients,
+                      String $type, String $header, String $body,
+                      String $priority,
+                      String $deliveryDate, String $status,
+                      String $return )
        $return:= MessageDeliveredResponse()
 end
 

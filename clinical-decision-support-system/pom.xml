@@ -60,6 +60,12 @@
             <version>${drools.pmml.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-grid-impl</artifactId>
+            <version>${drools.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.hibernate</groupId>

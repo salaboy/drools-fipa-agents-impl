@@ -14,9 +14,11 @@ when
                   $dxProcessId : this["dxProcessId"]
                 )
     $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", $steps : diagnosticProcessHistory )
+    $cd : DxDecision( this memberOf $steps, current == true )
 then
     System.out.println( "****************************************************************************************************************** ");
     System.out.println( "******************************************************************** Stepping to " + ($steps.size()) );
+    retract( $cd );
     insert( new DxStep( $dx.getId(), ($steps.size()) ) );
     retract( $a );
 end

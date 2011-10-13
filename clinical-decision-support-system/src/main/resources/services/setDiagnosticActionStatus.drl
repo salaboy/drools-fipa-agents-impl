@@ -19,7 +19,7 @@ when
                   $actionId     : this["actionId"],
                   $status       : this["status"] == "Complete"
                   )
-    $dx : DxAction( questionnaireId == $actionId, status == "Started" || == "Committed" )
+    $dx : DxAction( actionId == $actionId, status == "Started" || == "Committed" )
 then
     $dx.setStatus( (String) $status );
     $dx.setStatusUpdated( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
@@ -35,7 +35,7 @@ when
                   $actionId     : this["actionId"],
                   $status       : this["status"] == "Started"
                   )
-    $dx : DxAction( questionnaireId == $actionId, status == "Not Started" )
+    $dx : DxAction( actionId == $actionId, status == "Not Started" )
 then
     $dx.setStatus( (String) $status );
     $dx.setStatusUpdated( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
@@ -51,7 +51,7 @@ when
                   $actionId     : this["actionId"],
                   $status       : this["status"] == "Committed"
                   )
-    $dx : DxAction( questionnaireId == $actionId, status == "Started" )
+    $dx : DxAction( actionId == $actionId, status == "Started" )
 then
     $dx.setStatus( (String) $status );
     $dx.setStatusUpdated( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
@@ -67,7 +67,7 @@ when
                   $actionId     : this["actionId"],
                   $status       : this["status"] == "Not Started"
                   )
-    $dx : DxAction( questionnaireId == $actionId, status == "Started" )
+    $dx : DxAction( actionId == $actionId, status == "Started" )
 then
     $dx.setStatus( (String) $status );
     $dx.setStatusUpdated( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
@@ -84,8 +84,44 @@ then
     retract( $a );
 end
 
+declare SetDxActionReturn
+    actionId          : String          @key
+    actionStatus      : String
+    successStatus     : boolean         = true
+    statusMessage     : String          = "(ok)"
+end
 
 
-query setDiagnosticActionStatus( String $userId, String $patientId, String $processId, String $actionId, String $status, String $return )
-    DxAction( questionnaireId == $actionId, $return := status )
+rule "Init result"
+when
+ $a  : Action( actionName == "setDiagnosticActionStatus",
+               $actionId     : this["actionId"]
+              )
+       not SetDxActionReturn( $actionId ; )
+then
+    insert( new SetDxActionReturn( (String) $actionId, null, false, "Result initialized but not set") );
+end
+
+
+
+rule "Link result"
+no-loop
+when
+ $a  : Action( actionName == "setDiagnosticActionStatus",
+               $actionId     : this["actionId"]
+              )
+       DxAction( actionId == $actionId, $status : status )
+ $r  : SetDxActionReturn( $actionId ; )
+then
+    $r.setActionStatus( $status );
+    $r.setSuccessStatus( true );
+    $r.setStatusMessage( "(ok)" );
+    update ( $r );
+end
+
+
+
+query setDiagnosticActionStatus( String $userId, String $patientId, String $processId, String $actionId, String $status, SetDxActionReturn $return )
+    //DxAction( actionId == $actionId, $return := status )
+    $return := SetDxActionReturn( actionId == $actionId )
 end

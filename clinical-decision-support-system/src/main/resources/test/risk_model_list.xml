@@ -19,5 +19,6 @@
 	<add>
             <resource type="DRL" source="classpath:org/kmr2/mock/mock_ptsd.ref" name="MockPTSD" description="Post Traumatic Stress Disorder" tags="E,Risk" />
             <resource type="DRL" source="classpath:org/kmr2/mock/mock_cold.ref" name="MockCold" description="Uncommon Cold" tags="E,Risk" />
+            <resource type="DRL" source="classpath:org/kmr2/mock/mock_diab.ref" name="MockDiabetes" description="Sweet And Sour Diabetes" tags="Risk" />
 	</add>
 </change-set>

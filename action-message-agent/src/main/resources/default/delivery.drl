@@ -1,0 +1,410 @@
+package org.drools.test;
+
+import org.drools.fipa.body.content.*;
+import org.drools.fipa.action.message.*;
+import org.drools.fipa.action.message.types.*;
+import org.drools.fipa.action.message.invokers.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Date;
+
+import org.drools.fipa.action.helpers.*;
+
+
+import javax.xml.ws.BindingProvider;
+
+
+global java.util.Map channels;
+
+
+declare Entity
+    @Traitable
+    id                  : String        @key
+    resolved            : boolean                   = false
+    cn                  : String
+    mobile              : String
+    employeeNumber      : String
+    displayName         : String
+    gender              : String
+end
+
+
+declare OrgEntity
+@format(trait)
+    cn                  : String
+    mobile              : String
+    employeeNumber      : String
+    displayName         : String
+    gender              : String
+end
+
+declare Patient extends OrgEntity
+@format(trait)
+    id                  : String        @key
+    messageId           : String
+end
+
+declare Provider extends OrgEntity
+@format(trait)
+    id                  : String        @key
+    messageId           : String
+end
+
+declare Recipient extends OrgEntity
+@format(trait)
+    id                  : String        @key
+    messageId           : String
+end
+
+declare MainRecipient extends Recipient
+@format(trait)
+end
+
+declare SecondaryRecipient extends Recipient
+@format(trait)
+end
+
+declare HiddenRecipient extends Recipient
+@format(trait)
+end
+
+
+
+
+
+
+
+declare DeliverableMessage
+    id                  : String        @key
+end
+
+declare SMSMessage extends DeliverableMessage
+    mobileNumber        : String
+    text                : String
+end
+
+declare AlertMessage extends DeliverableMessage
+    ticketId            : String
+    recipient           : String
+    body                : String
+end
+
+
+declare MessageDeliveredResponse
+    refId               : String        @key
+    convoId             : String        @key
+end
+
+
+
+// totally useless rule, except for debug :)
+rule "Deliver Message Action Found"
+    when
+        $action: Action( actionName == "deliverMessage",
+                          $refId   : this["refId"],
+                          $convoId : this["conversationId"]
+                        )
+        $old : MessageDeliveredResponse( refId != $refId || convoId != $convoId )
+    then
+        System.out.println("!!!! Action RefId >>> " + $refId );
+        System.out.println("!!!! Action ConvoId >>> " + $convoId );
+end
+
+
+//TODO : remove when delivery will generate the resp
+rule "Deliver Message Action Reset Result"
+    when
+        $action: Action( actionName == "deliverMessage",
+                          $refId   : this["refId"],
+                          $convoId : this["conversationId"]
+                        )
+    then
+        insert( new MessageDeliveredResponse( (String) $refId, (String) $convoId ) );
+end
+
+
+
+
+
+rule "Deliver Message Action Reset Result - Clean"
+    when
+        $action: Action( actionName == "deliverMessage",
+                          $refId   : this["refId"],
+                          $convoId : this["conversationId"]
+                        )
+        $old : MessageDeliveredResponse( refId != $refId || convoId != $convoId )
+    then
+        retract( $old );
+end
+
+
+rule "Clean Deliver Message Action"
+salience -999
+    when
+        $action: Action( actionName == "deliverMessage" )
+    then
+        retract( $action );
+end
+
+
+
+
+
+
+
+
+
+rule "Insert Subject-About Entities"
+    when
+        $action: Action( actionName == "deliverMessage",
+                         $refId        : this["refId"],
+                         $cnvId        : this["conversationId"],
+                         $subjectAbout : this["subjectAbout"]
+                       )
+        $id : String() from $subjectAbout
+    then
+        insertLogical( new Entity( $id ) );
+end
+
+
+rule "Resolve"
+when
+    $ent : Entity( $id : id, resolved == false )
+then
+    System.out.println( "I'm calling the LDAP Service here for " + $id );
+    // TOOD : CALL LDAP SERVICE HERE!
+
+        $ent.setCn( "cn_" + $id );
+        $ent.setMobile( "mob_00" + $id );
+        $ent.setEmployeeNumber( "empNum_" + $id );
+        $ent.setDisplayName( "name_" + $id );
+        $ent.setGender( "x" );
+
+    $ent.setResolved( true );
+    update( $ent );
+end
+
+
+rule "Resolve Patient"
+when
+    $action: Action( actionName == "deliverMessage",
+                         $refId : this["refId"],
+                         $cnvId : this["conversationId"],
+                         $subjectAbout : this["subjectAbout"]
+                       )
+    $pid : String() from ( (String[]) $subjectAbout )[0]
+    $ent : Entity( id == $pid, resolved == true )
+then
+//    System.out.println( "The patient ID IS  " + $pid );
+    Patient pat = don( $ent, Patient.class, true );
+        pat.setMessageId( (String) $cnvId );
+    update( pat );
+end
+
+
+rule "Resolve Main Recipients"
+when
+    $action: Action( actionName == "deliverMessage",
+                         $refId      : this["refId"],
+                         $cnvId      : this["conversationId"],
+                         $recipients : this["mainRecipients"]
+                       )
+    $rid : String() from ( (String[]) $recipients )
+    $ent : Entity( id == $rid, resolved == true )
+then
+//    System.out.println( "The recipient ID IS  " + $rid );
+    MainRecipient rec = don( $ent, MainRecipient.class, true );
+        rec.setMessageId( (String) $cnvId );
+    update( rec );
+end
+
+
+rule "Resolve Sender as Provider"
+when
+    $action: Action( actionName == "deliverMessage",
+                         $refId      : this["refId"],
+                         $cnvId      : this["conversationId"],
+                         $sender     : this["sender"]
+                       )
+    $ent : Entity( id == $sender, resolved == true )
+then
+//    System.out.println( "The provider ID IS  " + $sender );
+    Provider pro = don( $ent, Provider.class, true );
+        pro.setMessageId( (String) $cnvId );
+    update( pro );
+end
+
+
+
+
+//    $action: Action( actionName == "deliverMessage",
+//                        $refId          : this["refId"],
+//                        $convoId        : this["conversationId"],
+//                        $about          : this["subjectAbout"],
+//                        $mainRec        : this["mainRecipients"],
+//                        $secRec         : this["secondaryRecipients"],
+//                        $hiddenRec      : this["hiddenRecipients"],
+//                        $type           : this["type"],
+//                        $header         : this["header"],
+//                        $body           : this["body"],
+//                        $priority       : this["priority"],
+//                        $deliveryDate   : this["deliveryDate"],
+//                        $status         : this["status"]
+//                   )
+
+
+
+rule "Construct SMS"
+when
+    $action: Action( actionName == "deliverMessage",
+                        $refId          : this["refId"],
+                        $convoId        : this["conversationId"],
+                        $type           : this["type"] == "SMS",
+                        $header         : this["header"]
+                   )
+    $rec :   Recipient( messageId == $convoId, $mobile : mobile )
+then
+    insert( new SMSMessage( (String) $convoId, $mobile, (String) $header ) );
+end
+
+
+
+rule "Construct Alert Body"
+    when
+        $action: Action( actionName == "deliverMessage",
+                        $refId          : this["refId"],
+                        $convoId        : this["conversationId"],
+                        $about          : this["subjectAbout"],
+                        $mainRec        : this["mainRecipients"],
+                        $secRec         : this["secondaryRecipients"],
+                        $hiddenRec      : this["hiddenRecipients"],
+                        $type           : this["type"] == "ALERT",
+                        $header         : this["header"],
+                        $body           : this["body"],
+                        $priority       : this["priority"],
+                        $deliveryDate   : this["deliveryDate"],
+                        $status         : this["status"]
+                       )
+        $pat :   Patient( messageId == $convoId )
+        $pro :   Provider( messageId == $convoId )
+        $rec :   Recipient( messageId == $convoId )
+    then
+        Map args = new HashMap();
+            args.put( "recipient", $rec );
+            args.put( "patient", $pat );
+            args.put( "provider", $pro );
+
+        String finalBody = (String) org.mvel2.templates.TemplateRuntime.execute( org.mvel2.templates.TemplateCompiler.compileTemplate( (String) $body ), args );
+        System.out.println( finalBody );
+end
+
+
+
+rule "Construct Update Body"
+    when
+        $action: Action( actionName == "deliverMessage",
+                        $refId          : this["refId"],
+                        $convoId        : this["conversationId"],
+                        $type           : this["type"] == "UPDATE",
+                        $priority       : this["priority"],
+                        $deliveryDate   : this["deliveryDate"],
+                        $status         : this["status"]
+                       )
+        $rec :   Recipient( messageId == $convoId )
+    then
+        System.out.println( "UPDATE ALERT" );
+end
+
+
+rule "Deliver"
+when
+    $m : DeliverableMessage( )
+then
+    System.err.println( ">>>> " + $m );
+end
+
+
+
+
+
+//
+//rule "Invoke Channel"
+//    when
+//        $action: Action(actionName == "deliverMessage",
+//                        keySet contains "refId",
+//                        $refId : this["refId"],
+//                        keySet contains "conversationId",
+//                        $conversationId : this["conversationId"],
+//                        keySet contains "type",
+//                        $type : this["type"])
+//        $channel: Channel(type == $type, $endpoint: endpoint)
+//        $invoker: ChannelInvoker(type == $type )
+//        $recipient: Recipient(refId == $refId)
+//        String(this matches "^"+$type+":.*" ) from $recipient.channels
+//        $message: Message(refId == $refId)
+//    then
+//        System.out.println("!!!! Invoking channel endpoint >>> " + $channel.getEndpoint());
+//        System.out.println("!!!! Invoking channel for Recipient >>> " + $recipient);
+//        $invoker.invoke($endpoint, $message);
+//        insert(new MessageDeliveredResponse((String)$refId));
+//        retract($message);
+//        retract($action);
+//        //retract($recipient);
+//end
+//
+//rule "Invoke Channel Via DeliverMessage Service - Hack"
+//    when
+//        $action: Action(actionName == "deliverMessage",
+//                        keySet contains "refId",
+//                        $refId : this["refId"],
+//                        keySet contains "conversationId",
+//                        $conversationId : this["conversationId"],
+//                        keySet contains "type",
+//                        $type : this["type"])
+//        $channel: Channel(type == $type, $endpoint: endpoint)
+//        $invoker: ChannelInvoker(type == $type )
+//        $recipient: Recipient(refId == $refId)
+//        $message: Message(refId == $refId)
+//    then
+//        System.out.println("Hack- !!!! Invoking channel endpoint >>> " + $channel.getEndpoint());
+//        System.out.println("Hack- !!!! Invoking channel for Recipient >>> " + $recipient);
+//        $invoker.invoke($endpoint, $message);
+//        insert(new MessageDeliveredResponse((String)$refId));
+//        retract($message);
+//        retract($action);
+//        //retract($recipient);
+//end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+query deliverMessage( String $refId, String $conversationId,
+                      String $subjectabout,
+                      String $sender, String $mainRecipients, String $secondaryRecipients, String $hiddenRecipients,
+                      String $type, String $header, String $body,
+                      String $priority,
+                      String $deliveryDate, String $status,
+                      MessageDeliveredResponse $return )
+      $return:= MessageDeliveredResponse( $refId, $conversationId; )
+end
+
+
+
+
+
+
+

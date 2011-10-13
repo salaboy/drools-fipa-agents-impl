@@ -35,6 +35,8 @@ then
     retract( $a );
 end
 
-query completeDiagnosticGuideProcess( String $userId, String $patientId, String $dxProcessId, String $status, String $return )
-    $return := String() from "ok"
+
+
+query completeDiagnosticGuideProcess( String $userId, String $patientId, String $dxProcessId, String $status, DiagnosticGuideProcess $return )
+    $return := DiagnosticGuideProcess()
 end

@@ -79,8 +79,8 @@ public class ClinicalDecisionSupportAgentServiceTest {
         SynchronousRequestHelper helper = new SynchronousRequestHelper();
 
         LinkedHashMap<String,Object> args = new LinkedHashMap<String,Object>();
-        args.put("userId","patient1");
-        args.put("patientId","surveyPatient");
+        args.put("userId","drX");
+        args.put("patientId","99990070");
         args.put("surveyId","123456UNIQUESURVEYID");
 
         helper.invokeRequest("getSurvey", args);
@@ -96,13 +96,32 @@ public class ClinicalDecisionSupportAgentServiceTest {
     }
 
 
+    @Test
+    public void testGetDx() {
+
+        SynchronousRequestHelper helper = new SynchronousRequestHelper();
+
+        LinkedHashMap<String,Object> args = new LinkedHashMap<String,Object>();
+        args.put("userId","drX");
+        args.put("patientId","99990070");
+        args.put("dxProcessId","c1252f36-a582-41b1-8c03-51a6e2c6cd7c");
+
+        args.put("forceRefresh", true);
+        helper.invokeRequest("getDiagnosticProcessStatus", args);
+
+        String rs = (String) helper.getReturn( false );
+
+        System.out.println(rs);
+    }
+
+
 
 
     @Test
     public void testProbe() {
         SynchronousRequestHelper helper = new SynchronousRequestHelper();
         LinkedHashMap<String,Object> args = new LinkedHashMap<String,Object>();
-        args.put("patientId","surveyPatient");
+        args.put("patientId","99990070");
         helper.invokeRequest("probe", args);
 
         String rs = (String) helper.getReturn( false );
@@ -218,7 +237,7 @@ public class ClinicalDecisionSupportAgentServiceTest {
 
         LinkedHashMap<String,Object> args = new LinkedHashMap<String,Object>();
         args.put("userId","docX");
-        args.put("patientId","patient33");
+        args.put("patientId","99990070");
         args.put("modelIds",new String[] {mid} );
 
 
@@ -245,7 +264,7 @@ public class ClinicalDecisionSupportAgentServiceTest {
 
         args.clear();
         args.put("userId","drX");
-        args.put("patientId","patient33");
+        args.put("patientId","99990070");
         args.put("surveyId",sid);
 
         helper.invokeRequest("getSurvey", args);
@@ -278,8 +297,10 @@ public class ClinicalDecisionSupportAgentServiceTest {
 
         LinkedHashMap<String,Object> args = new LinkedHashMap<String,Object>();
         args.clear();
+        args.put("userId","drX");
         args.put("patientId","patient33");
         args.put("modelId",mid);
+        args.put("type","Alert");
         args.put("threshold",value);
         helper.invokeRequest("setRiskThreshold", args);
 
@@ -313,13 +334,78 @@ public class ClinicalDecisionSupportAgentServiceTest {
 
 
         args.clear();
+        args.put("userId","drX");
         args.put("patientId","patient33");
         args.put("modelId",mid);
+        args.put("type","Alert");
         args.put("threshold","50");
         helper.invokeRequest("setRiskThreshold", args);
 
 
     }
+
+
+
+
+
+
+    @Test
+    public void testStartDxGuide() {
+        XPath finder = XPathFactory.newInstance().newXPath();
+        SynchronousRequestHelper helper = new SynchronousRequestHelper();
+        String mid = "MockPTSD";
+
+
+        String value = ""+((int) Math.round(Math.random()*100));
+
+        LinkedHashMap<String,Object> args = new LinkedHashMap<String,Object>();
+        args.clear();
+        args.put("userId", "docX");
+        args.put("patientId", "patient33" );
+        args.put("decModelId","MockDecision");
+        args.put("diagModelId","MockDiag");
+        helper.invokeRequest("startDiagnosticGuideProcess", args);
+
+        System.out.println(helper.getReturn(false));
+
+
+    }
+
+
+    @Test
+    public void testGetDxGuide() {
+        XPath finder = XPathFactory.newInstance().newXPath();
+        SynchronousRequestHelper helper = new SynchronousRequestHelper();
+
+
+        LinkedHashMap<String,Object> args = new LinkedHashMap<String,Object>();
+        args.clear();
+        args.put("userId", "docX");
+        args.put("patientId", "patient33" );
+        args.put("dxProcessId","80e2d323-5bb7-4753-9e71-4465d9a205ff");
+        args.put("refresh",true);
+        helper.invokeRequest("getDiagnosticProcessStatus", args);
+
+        System.out.println(helper.getReturn(false));
+
+
+    }
+
+
+    @Test
+    public void testGetRiskModels() {
+        LinkedHashMap<String,Object> args = new LinkedHashMap<String,Object>();
+        args.put("userId","drX");
+        args.put("patientId","99990070");
+        SynchronousRequestHelper helper = new SynchronousRequestHelper();
+
+        helper.invokeRequest("getRiskModels", args);
+
+        System.out.println(helper.getReturn(false));
+
+    }
+
+
 
 
 
