@@ -81,12 +81,12 @@ end
 
 rule "At risk"
 when
-            RiskThreshold( $ctx : modelId, $thold : threshold )
+            RiskThreshold( $ctx : modelId, type == "Alert", $thold : threshold )
     $risk : RiskValue( context == $ctx, value > ($thold / 100.0) )
     ?patientName( $pat ; )
     ?userName( $pro ; )
 then
-    System.err.println(" AT RISK ------------ of " + $ctx + " contact " + $pat + " and " + $pro );
+    System.out.println(" AT RISK ------------ of " + $risk + " contact " + $pat + " and " + $pro );
 
     InteractionTicket ticket = new InteractionTicket( java.util.UUID.randomUUID().toString(),
                                                       new java.util.ArrayList(),
@@ -239,7 +239,14 @@ then
 end
 
 
-
+rule "Completion"
+when
+    $al : Alert( $id, $dest, $formId, $channel ; )
+    org.drools.informer.Progress( $formId, 100 ; this after[0,4s] $al )
+then
+    System.out.println(" RETRACT!! " + $dest );
+    retract( $al );
+end
 
 
 

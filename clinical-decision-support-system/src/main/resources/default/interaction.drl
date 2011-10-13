@@ -63,6 +63,15 @@ then
 end
 
 
+rule "Clean actors"
+when
+    $tk : TicketActor( $convoId, $ticketId, $dest ; )
+    not   Alert( ticketId == $ticketId )
+then
+    System.out.println( "REMOVAL OF ACTOR!");
+    retract( $tk );
+end
+
 
 
 
