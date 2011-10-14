@@ -4,7 +4,7 @@
 <h2>@{title}</h2>
 (This is free form HTML with an optionally embedded survey)
 
-Dear @{patient},
+Dear @@{recipient.displayName},
 
 <p>
 this is a gentle reminder that you are in a high risk condition
@@ -14,7 +14,7 @@ to develop the disease known as @{disease}.
 <p>
 As should be clear from the following chart, you have an
 estimated probability of @{risk}%, which is above the acceptable
-threshold set by your provider, doctor @{provider}.
+threshold set by your provider, doctor @@{provider.displayName}.
 </p>
 
 (Then, later on down the page in the same HTML, possibly a chart...)

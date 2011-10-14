@@ -80,7 +80,6 @@ salience -100
 when
     $a  : Action( actionName == "setDiagnosticActionStatus" )
 then
-    System.out.println("Clearing setDxAction");
     retract( $a );
 end
 

@@ -19,14 +19,26 @@ when
                  $patientId : this["patientId"],
                  $surveyId : this["surveyId"],
                  $questionId : this["questionId"],
-                 $value : this["answer"]
+                 $value : this["answer"] != null
                  )
 
 then
     retract($a);
-    Answer ans = new Answer((String) $questionId, (String) $value);
-    System.err.println( ">>>>>>>>>>>>>>>>>>>>>>>>>>> " + ans );
-    insert( ans );
+    insert( new Answer((String) $questionId, (String) $value) );
+end
+
+rule "Action_Request : clearSurvey"
+when
+    $a : Action( actionName == "setSurvey",
+                 $userId : this["userId"],
+                 $patientId : this["patientId"],
+                 $surveyId : this["surveyId"],
+                 $questionId : this["questionId"],
+                 $value : this["answer"] == null
+                 )
+then
+    retract($a);
+    insert( new Answer( (String) $questionId, "null" ) );
 end
 
 

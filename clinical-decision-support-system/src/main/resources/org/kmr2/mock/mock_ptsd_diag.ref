@@ -12,7 +12,7 @@ then
         res.setResourceType(ResourceType.PMML);
         res.setName("MockDiag");
         res.setDescription("Post Traumatic Stress Disorder");
-        res.setTags("E,Diagnostic");
+        res.setCategories("E,Diagnostic");
     insert( res );
 end
 

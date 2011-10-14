@@ -133,15 +133,16 @@ then
     System.out.println( " ******************************* Deliver to " + $actorId + "  : >> " + $formIds + " in " + $convo + " using " + $channels.get(0) );
 //    SynchronousRequestHelper helper = new SynchronousRequestHelper( new java.net.URL("TODO NEED THE EXACT URL") );
 
+    int risk = (int) Math.round(100*$value);
     String body = "";
     for ( int j = 0; j < $formIds.size(); j ++ ) {
         java.util.Map vars = new java.util.HashMap(10);
         vars.put("title", $model );
         vars.put("patient", $pat );
         vars.put("disease", $model );
-        vars.put("risk", 100*$value );
+        vars.put("risk", risk );
         vars.put("provider", $pro );
-        vars.put("nonRisk", (100-100*$value) );
+        vars.put("nonRisk", 100-risk );
         vars.put("surveyId", $formIds.get(j) );
 
         CompiledTemplate template = (CompiledTemplate) org.kmr2.TemplateBuilder.getRegistry().getNamedTemplate( (String) $bodies.get(j) );
@@ -157,13 +158,13 @@ then
     map.put("secondaryRecipients", new String[0] );    // Array of Ids
     map.put("hiddenRecipients", new String[0] );       // Array of Ids
     map.put("type", $channels.get(0) );
-    map.put("header", "Risk threshold exceeded : " + $model );
+    map.put("header", "Risk threshold exceeded : " + $model + "(" + risk + "%)" );
     map.put("body", body );
     map.put("priority", "Critical" );
     map.put("deliveryDate", new java.util.Date() );
     map.put("status", "New" );                         // [ "New" | "Read" | "Unread" | "Escalated" | ... ]
 
-//    System.out.println(map);
+    System.out.println(map);
 
 
 //    helper.invokeRequest("deliverMessage",args);
