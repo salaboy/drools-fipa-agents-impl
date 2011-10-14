@@ -47,6 +47,7 @@ public class DeliverMessageHelper {
         params.put("body", text);
         params.put("header", text);
         params.put("sender", mobile);
+        
         List<String> recipients = new ArrayList<String>();
         recipients.add(mobile);
         params.put("mainRecipients", recipients);
@@ -56,7 +57,28 @@ public class DeliverMessageHelper {
         System.out.println(" Sending a SMS: "+mobile+ " - text: "+text);
         deliverMessage(endpoint, params);
     }
-
+    
+    public static void sendAlert(String endpoint, String refId, String header, String body, String sender, String recipient) {
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("refId", refId);
+        params.put("body", body);
+        params.put("header", header);
+        params.put("sender", sender);
+        params.put("priority", "HIGH");
+        params.put("deliveryDate", new Date().toString());
+        
+        List<String> recipients = new ArrayList<String>();
+        recipients.add(recipient);
+        params.put("mainRecipients", recipients);
+        params.put("subjectAbout", recipients);
+        List<String> types = new ArrayList<String>();
+        types.add("ALERT");
+        params.put("type", types);
+        System.out.println(" Sending a new Alert ("+sender+"): "+header+ " - body: "+body + " --");
+        deliverMessage(endpoint, params);
+    }
+    
+   
     private static DSAIntegrationPortType getPort(String endpoint) {
         DSAIntegration service = new DSAIntegration();
         DSAIntegrationPortType port = service.getDSAIntegrationPortSoap11();
