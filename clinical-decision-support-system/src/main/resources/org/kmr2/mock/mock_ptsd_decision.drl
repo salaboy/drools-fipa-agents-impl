@@ -50,7 +50,7 @@ declare AskDeployment extends org.kmr2.decision.DxAutoCommittingAction
 end
 
 
-declare DoExcruciatinglyPainfulTest extends org.kmr2.decision.DxAction
+declare DoExcruciatinglyPainfulTest extends org.kmr2.decision.DxExternalCommittingAction
 @Questionable( label = "There's something I have to tell you...", language = "EN" )
 
     descr           : String            = "You had better not know"
@@ -683,7 +683,7 @@ end
 
 rule "Freeze manual-commit questions"
 when
-    $act : DxExternalCommittingAction( status == "Complete" )
+    $act : DxExternalCommittingAction( status == "Committed" )
     $dma : DomainModelAssociation( object == $act, $qid : questionId )
     $qst : Question( id == $qid, finalAnswer == false )
 then

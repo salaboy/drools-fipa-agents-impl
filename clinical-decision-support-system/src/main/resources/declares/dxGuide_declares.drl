@@ -59,7 +59,9 @@ end
 
 
 declare DxAutoCommittingAction extends DxAction
+end
 
+declare DxExternalCommittingAction extends DxAction
 end
 
 
