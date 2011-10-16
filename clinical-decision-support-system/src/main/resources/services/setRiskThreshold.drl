@@ -51,7 +51,6 @@ when
     not RiskThreshold( modelId == $mid, type == "Alert" )
     ?defaultRiskThreshold( $def ; )
 then
-    System.err.println(" Generating default alert threshold"  );
     insert( new RiskThreshold( $mid, "Alert", $def ) );
 end
 

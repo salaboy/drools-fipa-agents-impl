@@ -195,6 +195,16 @@ end
 
 
 
+
+rule "Update Severity : Not Available"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+           not RiskValue( context == $mid )
+then
+    $rmd.setSeverity( "n/a" );
+end
+
+
 rule "Update Severity : Low"
 when
     $rmd : RiskModelDetail( $mid : modelId )
