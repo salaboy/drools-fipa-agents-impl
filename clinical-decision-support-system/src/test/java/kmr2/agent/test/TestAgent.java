@@ -1,10 +1,17 @@
 package kmr2.agent.test;
 
 import org.drools.ClassObjectFilter;
+import org.drools.KnowledgeBase;
+import org.drools.KnowledgeBaseFactory;
+import org.drools.builder.KnowledgeBuilder;
+import org.drools.builder.KnowledgeBuilderFactory;
+import org.drools.builder.ResourceType;
 import org.drools.definition.type.FactType;
 import org.drools.dssagentserver.helpers.SynchronousRequestHelper;
 import org.drools.fipa.*;
 import org.drools.fipa.body.acts.Inform;
+import org.drools.io.impl.ByteArrayResource;
+import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.rule.Variable;
 import org.jbpm.task.HumanTaskServiceLookup;
 import org.jbpm.task.Task;
@@ -517,7 +524,7 @@ public class TestAgent {
         assertEquals( "22", getValue( modelStats, "//modelId[.='MockCold']/../relativeRisk" ) );
 
 
-        setSurvey( "drX", "patient33", sid2, temperature, null );
+        setSurvey( "drX", "patient33", sid2, temperature, "null" );
 
         modelStats = getRiskModesDetail( "docX", "patient33", modelsIds  );
         assertEquals( "-1", getValue( modelStats, "//modelId[.='MockCold']/../relativeRisk" ) );
@@ -962,7 +969,11 @@ public class TestAgent {
 
 
 
+
 }
+
+
+
 
 
 

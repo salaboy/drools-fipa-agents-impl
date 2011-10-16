@@ -22,9 +22,6 @@ import org.kmr2.decision.*;
 
 
 
-declare org.kmr2.decision.DxAutoCommittingAction
-end
-
 
 declare AskAlcohol extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Alcohol Abuse", language = "EN" )
@@ -43,7 +40,7 @@ declare AskDeployment extends org.kmr2.decision.DxAutoCommittingAction
 
     descr           : String            = "Ask for number of deployments "
 
-    deploys         : String
+    deploys         : String            = null
     @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = " How many times have you been deployed ? ", required = true )
     @AllowedAnswers( values = { "0=No deployments", "1=Just once", "2+=Two or more times"  } )
 
@@ -55,7 +52,7 @@ declare DoExcruciatinglyPainfulTest extends org.kmr2.decision.DxExternalCommitti
 
     descr           : String            = "You had better not know"
 
-    confirm         : Boolean           = false
+    confirm         : Boolean           = null
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Are you sure ? ", required = true )
 end
 
@@ -64,49 +61,49 @@ declare AskSomething1 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 1", language = "EN" )
     descr           : String            = "No survey here, just complete"
 
-    question        : Boolean
+    question        : Boolean           = null
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
 declare AskSomething2 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 2", language = "EN" )
     descr           : String            = "No survey here, just complete"
-    question        : Boolean
+    question        : Boolean           = null
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
 declare AskSomething3 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 3", language = "EN" )
     descr           : String            = "No survey here, just complete"
-    question        : Boolean
+    question        : Boolean           = null
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
 declare AskSomething4 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 4", language = "EN" )
     descr           : String            = "No survey here, just complete"
-    question        : Boolean
+    question        : Boolean           = null
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
 declare AskSomething5 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 5", language = "EN" )
     descr           : String            = "No survey here, just complete"
-    question        : Boolean
+    question        : Boolean           = null
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
 declare AskSomething6 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 6", language = "EN" )
     descr           : String            = "No survey here, just complete"
-    question        : Boolean
+    question        : Boolean           = null
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
 declare AskSomething7 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 7", language = "EN" )
     descr           : String            = "No survey here, just complete"
-    question        : Boolean
+    question        : Boolean           = null
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
 declare AskSomething8 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 8", language = "EN" )
     descr           : String            = "No survey here, just complete"
-    question        : Boolean
+    question        : Boolean           = null
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
 
@@ -538,12 +535,6 @@ then
 //    System.out.println( "Set action n. questions to" + $nq );
     $act.setNumQuestions( $nq );
 end
-
-
-
-
-
-
 
 
 
