@@ -198,7 +198,7 @@ when
     $pid : String() from ( (String[]) $subjectAbout )[0]
     $ent : Entity( id == $pid, resolved == true )
 then
-//    System.out.println( "The patient ID IS  " + $pid );
+    System.out.println( "The patient ID IS  " + $pid );
     Patient pat = don( $ent, Patient.class, true );
         pat.setMessageId( (String) $cnvId );
     update( pat );
@@ -215,7 +215,7 @@ when
     $rid : String() from ( (String[]) $recipients )
     $ent : Entity( id == $rid, resolved == true )
 then
-//    System.out.println( "The recipient ID IS  " + $rid );
+    System.out.println( "The recipient ID IS  " + $rid );
     MainRecipient rec = don( $ent, MainRecipient.class, true );
         rec.setMessageId( (String) $cnvId );
     update( rec );
@@ -231,9 +231,11 @@ when
                        )
     $ent : Entity( id == $sender, resolved == true )
 then
-//    System.out.println( "The provider ID IS  " + $sender );
+    System.out.println( "The provider ID IS  " + $sender );
     Provider pro = don( $ent, Provider.class, true );
+    System.out.println( pro.hashCode() );
         pro.setMessageId( (String) $cnvId );
+    System.out.println( pro.hashCode() );
     update( pro );
 end
 
@@ -272,119 +274,81 @@ end
 
 
 
-rule "Construct Alert Body"
-    when
-        $action: Action( actionName == "deliverMessage",
-                        $refId          : this["refId"],
-                        $convoId        : this["conversationId"],
-                        $about          : this["subjectAbout"],
-                        $mainRec        : this["mainRecipients"],
-                        $secRec         : this["secondaryRecipients"],
-                        $hiddenRec      : this["hiddenRecipients"],
-                        $type           : this["type"] == "ALERT",
-                        $header         : this["header"],
-                        $body           : this["body"],
-                        $priority       : this["priority"],
-                        $deliveryDate   : this["deliveryDate"],
-                        $status         : this["status"]
-                       )
-        $pat :   Patient( messageId == $convoId )
-        $pro :   Provider( messageId == $convoId )
-        $rec :   Recipient( messageId == $convoId )
-    then
-        Map args = new HashMap();
-            args.put( "recipient", $rec );
-            args.put( "patient", $pat );
-            args.put( "provider", $pro );
-
-        String finalBody = (String) org.mvel2.templates.TemplateRuntime.execute( org.mvel2.templates.TemplateCompiler.compileTemplate( (String) $body ), args );
-        System.out.println( finalBody );
-end
+   rule "Construct SMS"
+   when
+       $action: Action( actionName == "deliverMessage",
+                           $refId          : this["refId"],
+                           $convoId        : this["conversationId"],
+                           $type           : this["type"] == "SMS",
+                           $header         : this["header"]
+                      )
+       $rec :   Recipient( messageId == $convoId, $mobile : mobile )
+   then
+       //insert( new SMSMessage( (String) $convoId, $mobile, (String) $header ) );
+       DeliverMessageHelper.sendSMS("http://192.168.5.47:8080/PresentationServices/DSAIntegration?WSDL", $mobile, (String) $header );
+   end
 
 
 
-rule "Construct Update Body"
-    when
-        $action: Action( actionName == "deliverMessage",
-                        $refId          : this["refId"],
-                        $convoId        : this["conversationId"],
-                        $type           : this["type"] == "UPDATE",
-                        $priority       : this["priority"],
-                        $deliveryDate   : this["deliveryDate"],
-                        $status         : this["status"]
-                       )
-        $rec :   Recipient( messageId == $convoId )
-    then
-        System.out.println( "UPDATE ALERT" );
-end
+   rule "Construct Alert Body"
+       when
+           $action: Action( actionName == "deliverMessage",
+                           $refId          : this["refId"],
+                           $convoId        : this["conversationId"],
+                           $about          : this["subjectAbout"],
+   			               $sender		   : this["sender"],
+                           $mainRec        : this["mainRecipients"],
+                           $secRec         : this["secondaryRecipients"],
+                           $hiddenRec      : this["hiddenRecipients"],
+                           $type           : this["type"] == "ALERT",
+                           $header         : this["header"],
+                           $body           : this["body"],
+                           $priority       : this["priority"],
+                           $deliveryDate   : this["deliveryDate"],
+                           $status         : this["status"]
+                          )
+           $pat :   Patient( messageId == $convoId )
+           $pro :   Provider( messageId == $convoId )
+           $rec :   Recipient( messageId == $convoId )
+       then
+           Map args = new HashMap();
+               args.put( "recipient", $rec );
+               args.put( "patient", $pat );
+               args.put( "provider", $pro );
 
-
-rule "Deliver"
-when
-    $m : DeliverableMessage( )
-then
-    System.err.println( ">>>> " + $m );
-end
-
-
-
-
-
-//
-//rule "Invoke Channel"
-//    when
-//        $action: Action(actionName == "deliverMessage",
-//                        keySet contains "refId",
-//                        $refId : this["refId"],
-//                        keySet contains "conversationId",
-//                        $conversationId : this["conversationId"],
-//                        keySet contains "type",
-//                        $type : this["type"])
-//        $channel: Channel(type == $type, $endpoint: endpoint)
-//        $invoker: ChannelInvoker(type == $type )
-//        $recipient: Recipient(refId == $refId)
-//        String(this matches "^"+$type+":.*" ) from $recipient.channels
-//        $message: Message(refId == $refId)
-//    then
-//        System.out.println("!!!! Invoking channel endpoint >>> " + $channel.getEndpoint());
-//        System.out.println("!!!! Invoking channel for Recipient >>> " + $recipient);
-//        $invoker.invoke($endpoint, $message);
-//        insert(new MessageDeliveredResponse((String)$refId));
-//        retract($message);
-//        retract($action);
-//        //retract($recipient);
-//end
-//
-//rule "Invoke Channel Via DeliverMessage Service - Hack"
-//    when
-//        $action: Action(actionName == "deliverMessage",
-//                        keySet contains "refId",
-//                        $refId : this["refId"],
-//                        keySet contains "conversationId",
-//                        $conversationId : this["conversationId"],
-//                        keySet contains "type",
-//                        $type : this["type"])
-//        $channel: Channel(type == $type, $endpoint: endpoint)
-//        $invoker: ChannelInvoker(type == $type )
-//        $recipient: Recipient(refId == $refId)
-//        $message: Message(refId == $refId)
-//    then
-//        System.out.println("Hack- !!!! Invoking channel endpoint >>> " + $channel.getEndpoint());
-//        System.out.println("Hack- !!!! Invoking channel for Recipient >>> " + $recipient);
-//        $invoker.invoke($endpoint, $message);
-//        insert(new MessageDeliveredResponse((String)$refId));
-//        retract($message);
-//        retract($action);
-//        //retract($recipient);
-//end
+           String finalBody = (String) org.mvel2.templates.TemplateRuntime.execute( org.mvel2.templates.TemplateCompiler.compileTemplate( (String) $body ), args );
+           DeliverMessageHelper.sendAlert( "http://192.168.5.47:8080/PresentationServices/DSAIntegration?WSDL",
+                                           (String) $convoId,
+                                           (String) $header,
+                                           finalBody,
+                                           (String) $sender,
+                                           $rec.getId(),
+                                           $about );
+   end
 
 
 
-
-
-
-
-
+   rule "Construct Update Body"
+       when
+           $action: Action( actionName == "deliverMessage",
+                           $refId          : this["refId"],
+   			               $sender		: this["sender"],
+                           $convoId        : this["conversationId"],
+                           $type           : this["type"] == "UPDATE",
+                           $priority       : this["priority"],
+                           $deliveryDate   : this["deliveryDate"],
+                           $status         : this["status"],
+                           $header         : this["header"]
+                          )
+           $rec :   Recipient( messageId == $convoId )
+       then
+   	        DeliverMessageHelper.sendAlert( "http://192.168.5.47:8080/PresentationServices/DSAIntegration?WSDL",
+   	                                        (String) $convoId,
+   	                                        (String) $header,
+   	                                        (String) $status,
+   	                                        (String) $sender,
+   	                                        $rec.getId() );
+   end
 
 
 

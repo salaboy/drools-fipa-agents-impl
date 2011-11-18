@@ -20,7 +20,7 @@
 
   <DataDictionary numberOfFields="2">
     <DataField dataType="double" name="temp" optype="continuous" displayName="Outside Temperature">
-      <Interval closure="closedClosed" leftMargin="0.0" rightMargin="40.0" />
+        <Interval closure="closedClosed" leftMargin="0.0" rightMargin="40.0" />
     </DataField>
     <DataField dataType="double" name="coldRisk" optype="continuous" displayName="Cold Risk Factor"/>
   </DataDictionary>

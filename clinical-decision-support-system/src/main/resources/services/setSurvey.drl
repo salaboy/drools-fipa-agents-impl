@@ -19,24 +19,82 @@ when
                  $patientId : this["patientId"],
                  $surveyId : this["surveyId"],
                  $questionId : this["questionId"],
-                 $value : this["answer"]
+                 $value : this["answer"] != null
                  )
 
 then
-    retract($a);
-    Answer ans = new Answer((String) $questionId, (String) $value);
-    System.err.println( ">>>>>>>>>>>>>>>>>>>>>>>>>>> " + ans );
-    insert( ans );
+    insert( new Answer((String) $questionId, (String) $value) );
 end
+
+rule "Action_Request : clearSurvey"
+when
+    $a : Action( actionName == "setSurvey",
+                 $userId : this["userId"],
+                 $patientId : this["patientId"],
+                 $surveyId : this["surveyId"],
+                 $questionId : this["questionId"],
+                 $value : this["answer"] == null
+                 )
+then
+    insert( new Answer( (String) $questionId, "null" ) );
+end
+
+
+
+
+rule "Action_Request : retract"
+salience -1000
+when
+    $a : Action( actionName == "setSurvey" )
+then
+    retract( $a );
+end
+
+
 
 
 rule "Action_Request : setSurvey Helper"
 salience 10
+no-loop
 when
-    $a : Action( actionName == "setSurvey" )
+    $a : Action( actionName == "setSurvey",
+                 $userId : this["userId"],
+                 $patientId : this["patientId"],
+                 $surveyId : this["surveyId"],
+                 $questionId : this["questionId"],
+                 $value : this["answer"]
+                 )
+    $c : ChangeGUIAdapter( itemId == $surveyId )
 then
-    insert( new ChangeCollector() );
+    System.out.println( "§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§  RESETTING CGA for " + $c );
+    $c.getUpdatedQuestions().clear();
+    update( $c );
 end
+
+
+
+
+rule "Action_Request : setSurvey Collect"
+salience -100
+no-loop
+when
+    $a : Action( actionName == "setSurvey",
+                 $userId : this["userId"],
+                 $patientId : this["patientId"],
+                 $surveyId : this["surveyId"],
+                 $questionId : this["questionId"],
+                 $value : this["answer"]
+                 )
+    questionUpdate( $update, $adapter ; )
+    $c : ChangeGUIAdapter( itemId == $surveyId, updatedQuestions not contains $adapter )
+    Questionnaire( id == $surveyId, availableItems contains $update.questionId )
+then
+    System.out.println( "*** PICKED UP " + $update );
+    $c.getUpdatedQuestions().add( $adapter );
+    retract( $update );
+end
+
+
 
 
 

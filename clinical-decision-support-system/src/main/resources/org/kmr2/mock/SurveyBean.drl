@@ -43,7 +43,7 @@ declare SurveyBean  extends Surveyable
     @QuestionMark( type = Question.QuestionType.TYPE_LIST, label = "Please choose all hobbies that apply : ", required = true )
     @AllowedAnswers( values = { "CMP=Camping", "FSH=Fishing", "GLF=Golf", "HGL=Hang Gliding" } )
 
-    question4 : int     = 99
+    question4 : Integer     = 99
     @QuestionMark( type = Question.QuestionType.TYPE_NUMBER, label = "Please enter a numeric value : ", required = false )
 
     question5 : String
@@ -52,13 +52,13 @@ declare SurveyBean  extends Surveyable
     question6 : Date
     @QuestionMark( type = Question.QuestionType.TYPE_DATE, label = "Please enter any date value : ", dateFormat = "dd/MM/yyyy" )
 
-    question7 : int
+    question7 : Integer
     @QuestionMark( type = Question.QuestionType.TYPE_NUMBER, label = "Please enter a numeric value again: ", required = false )
 
-    question8 : boolean
+    question8 : Boolean
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label=" True of false? ", required = false )
 
-    question9 : double
+    question9 : Double
     @QuestionMark( type = Question.QuestionType.TYPE_DECIMAL, label="Please enter a decimal value : ", required = false )
 
     question10 : Double
@@ -69,7 +69,7 @@ declare SurveyBean  extends Surveyable
     @QuestionMark( type = Question.QuestionType.TYPE_DATE, label = "Please choose a date : ", required = false, dateFormat = "dd/MM/yyyy" )
     @AllowedAnswers( values = { "01/01/2001=1st Jan 2001", "02/02/2002=2nd Feb 2002"} )
 
-    question12 : boolean
+    question12 : Boolean
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = "Please choose true or false : ", required = false )
     @AllowedAnswers( values = { "true=Yes", "false=No."} )
 
@@ -95,7 +95,7 @@ declare SurveyBean  extends Surveyable
     @AllowedAnswers( values = { "01/01/2001=1st Jan 2001", "02/02/2002=2nd Feb 2002", "03/03/2003=3rd March 2003"} )
 
 
-    finalQuestion : boolean
+    finalQuestion : Boolean
     @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = "Complete", required = false )
 
 

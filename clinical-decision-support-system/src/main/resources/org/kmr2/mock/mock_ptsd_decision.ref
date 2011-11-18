@@ -12,7 +12,7 @@ then
         res.setResourceType(ResourceType.DRL);
         res.setName("MockDecision");
         res.setDescription("Post Traumatic Stress Disorder");
-        res.setTags("E,Decision");
+        res.setCategories("E,Decision");
     insert( res );
 end
 

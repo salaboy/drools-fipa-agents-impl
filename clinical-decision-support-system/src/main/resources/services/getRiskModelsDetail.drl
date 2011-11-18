@@ -131,6 +131,14 @@ then
     $rmd.setRelativeRisk( (int) Math.round( $val * 100 ) ) ;
 end
 
+rule "Update Risk III"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+           not RiskValue( context == $mid )
+then
+    $rmd.setRelativeRisk( -1 ) ;
+end
+
 
 rule "Threshold"
 when
@@ -185,6 +193,16 @@ end
 
 
 
+
+
+
+rule "Update Severity : Not Available"
+when
+    $rmd : RiskModelDetail( $mid : modelId )
+           not RiskValue( context == $mid )
+then
+    $rmd.setSeverity( "n/a" );
+end
 
 
 rule "Update Severity : Low"

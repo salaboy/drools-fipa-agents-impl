@@ -25,8 +25,8 @@ when
 //                 $decModelId  : this["decModelId"],
 //                 $diagModelId : this["diagModelId"]
                 )
-    InternalResource( $diagModelId : name, description == $disease, tags contains "Diagnostic" )
-    InternalResource( $decModelId  : name, description == $disease, tags contains "Decision" )
+    InternalResource( $diagModelId : name, description == $disease, categories contains "Diagnostic" )
+    InternalResource( $decModelId  : name, description == $disease, categories contains "Decision" )
     not  DiagnosticGuideProcess( decModel == $decModelId, diagModel == $diagModelId, status != "Complete", disease == $disease )
 then
     DiagnosticGuideProcess dx = new DiagnosticGuideProcess();
@@ -51,8 +51,8 @@ when
                  $patientId   : this["patientId "],
                  $disease     : this["disease"]
                 )
-    not InternalResource( $diagModelId : name, description == $disease, tags contains "Diagnostic" )
-    not InternalResource( $decModelId  : name, description == $disease, tags contains "Decision" )
+    not InternalResource( $diagModelId : name, description == $disease, categories contains "Diagnostic" )
+    not InternalResource( $decModelId  : name, description == $disease, categories contains "Decision" )
     not  DiagnosticGuideProcess( status != "Complete", disease == $disease )
 then
     DiagnosticGuideProcess dx = new DiagnosticGuideProcess();

@@ -17,6 +17,7 @@ declare DiagnosticGuideProcess
    disease                  : String
    diagnosticProcessHistory : java.util.LinkedList
    canAdvance               : boolean                       = false
+   canCancel                : boolean                       = false
    actions                  : java.util.HashSet
    successStatus            : boolean                       = true
 end
@@ -32,6 +33,7 @@ declare DxDecision
     response                : String
     actions                 : java.util.List
 end
+
 
 
 declare Surveyable
@@ -53,6 +55,13 @@ declare DxAction extends Surveyable
 
     statusUpdated   : String
 
+end
+
+
+declare DxAutoCommittingAction extends DxAction
+end
+
+declare DxExternalCommittingAction extends DxAction
 end
 
 

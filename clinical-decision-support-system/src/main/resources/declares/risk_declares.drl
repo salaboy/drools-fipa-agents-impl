@@ -19,8 +19,8 @@ declare RiskModelDetail
     severity            : String        = "Low"
     title               : String
     disease             : String
-    relativeRisk        : int
-    relativeRiskRange   : int
+    relativeRisk        : int           = -1
+    relativeRiskRange   : int           = -1
     alertThreshold      : int
     surveyId            : String
     dxProcessId         : String

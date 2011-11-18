@@ -10,6 +10,8 @@ import org.drools.informer.Answer;
 import org.drools.informer.Questionnaire;
 
 import org.drools.informer.ProgressStatus;
+import org.drools.informer.Question;
+import org.drools.informer.DomainModelAssociation;
 import org.drools.informer.generator.FormRegistry;
 import org.drools.informer.generator.annotations.Questionable;
 import org.drools.informer.generator.annotations.QuestionMark;
@@ -20,11 +22,8 @@ import org.kmr2.decision.*;
 
 
 
-declare org.kmr2.decision.DxAction
-end
 
-
-declare AskAlcohol extends org.kmr2.decision.DxAction
+declare AskAlcohol extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Alcohol Abuse", language = "EN" )
 
     descr           : String            = "Ask for alcohol abuse"
@@ -36,48 +35,76 @@ declare AskAlcohol extends org.kmr2.decision.DxAction
 end
 
 
-declare AskDeployment extends org.kmr2.decision.DxAction
+declare AskDeployment extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Number of Deployments", language = "EN" )
 
     descr           : String            = "Ask for number of deployments "
 
-    deploys         : String
+    deploys         : String            = null
     @QuestionMark( type = Question.QuestionType.TYPE_TEXT, label = " How many times have you been deployed ? ", required = true )
     @AllowedAnswers( values = { "0=No deployments", "1=Just once", "2+=Two or more times"  } )
 
 end
 
-declare AskSomething1 extends org.kmr2.decision.DxAction
+
+declare DoExcruciatinglyPainfulTest extends org.kmr2.decision.DxExternalCommittingAction
+@Questionable( label = "There's something I have to tell you...", language = "EN" )
+
+    descr           : String            = "You had better not know"
+
+    confirm         : Boolean           = null
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Are you sure ? ", required = true )
+end
+
+
+declare AskSomething1 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 1", language = "EN" )
     descr           : String            = "No survey here, just complete"
+
+    question        : Boolean           = null
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
-declare AskSomething2 extends org.kmr2.decision.DxAction
+declare AskSomething2 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 2", language = "EN" )
     descr           : String            = "No survey here, just complete"
+    question        : Boolean           = null
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
-declare AskSomething3 extends org.kmr2.decision.DxAction
+declare AskSomething3 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 3", language = "EN" )
     descr           : String            = "No survey here, just complete"
+    question        : Boolean           = null
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
-declare AskSomething4 extends org.kmr2.decision.DxAction
+declare AskSomething4 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 4", language = "EN" )
     descr           : String            = "No survey here, just complete"
+    question        : Boolean           = null
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
-declare AskSomething5 extends org.kmr2.decision.DxAction
+declare AskSomething5 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 5", language = "EN" )
     descr           : String            = "No survey here, just complete"
+    question        : Boolean           = null
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
-declare AskSomething6 extends org.kmr2.decision.DxAction
+declare AskSomething6 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 6", language = "EN" )
     descr           : String            = "No survey here, just complete"
+    question        : Boolean           = null
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
-declare AskSomething7 extends org.kmr2.decision.DxAction
+declare AskSomething7 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 7", language = "EN" )
     descr           : String            = "No survey here, just complete"
+    question        : Boolean           = null
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
-declare AskSomething8 extends org.kmr2.decision.DxAction
+declare AskSomething8 extends org.kmr2.decision.DxAutoCommittingAction
 @Questionable( label = "Ask for Something 8", language = "EN" )
     descr           : String            = "No survey here, just complete"
+    question        : Boolean           = null
+    @QuestionMark( type = Question.QuestionType.TYPE_BOOLEAN, label = " Confirm ? ", required = false )
 end
 
 
@@ -134,6 +161,84 @@ end
 
 
 
+declare MockBooking
+@role(event)
+    actionId        : String
+end
+
+declare MockTest
+@role(event)
+    actionId        : String
+end
+
+declare MockAnalysis
+@role(event)
+    actionId        : String
+end
+
+declare MockResult
+@role(event)
+    actionId        : String
+end
+
+rule "Perform Costly Test"
+when
+    $dx   : DiagnosticGuideProcess( $dm : diagModel == "MockDiag", $steps : diagnosticProcessHistory, status != "Complete" )
+    $step : DxDecision( this memberOf $steps, current == true, $acts : actions )
+    $act  : DoExcruciatinglyPainfulTest( confirm == "true", this memberOf $acts, $aid : actionId != null, status == "Started" )
+then
+    System.out.println(" @@@@@@@@@@  We have booked a test, poor guy ");
+    insertLogical( new MockBooking( $aid ) );
+end
+
+rule "Book"
+when
+    $b : MockBooking()
+then
+    System.out.println( "We have received a booking ");
+end
+
+rule "or No Book"
+when
+    not MockBooking()
+then
+    System.out.println( "No more bookings in agenda ");
+end
+
+
+rule "Should be the other way around"
+when
+    $b    : MockBooking( $aid : actionId )
+//    we should check FOR a test, not its absence :)
+    not     MockTest( actionId == $aid, this after[0, 2s] $b )
+    $act  : DoExcruciatinglyPainfulTest( confirm == "true", actionId == $aid, status == "Started" )
+then
+    System.out.println(" @@@@@@@@@@  Ouch ");
+    $act.setStatus( "Committed" );
+    retract($b);
+    insert( new MockAnalysis( $aid ) );
+    update( $act );
+end
+
+
+rule "Now finish it"
+when
+    $b    : MockAnalysis( $aid : actionId )
+//    we should check FOR a test, not its absence :)
+    not     MockBooking( actionId == $aid, this after[0, 2s] $b )
+    $act  : DoExcruciatinglyPainfulTest( confirm == "true", actionId == $aid, status == "Committed" )
+then
+    System.out.println(" @@@@@@@@@@  Too bad! ");
+    $act.setStatus( "Complete" );
+    insert( new MockResult( $aid ) );
+    update( $act );
+end
+
+
+
+
+
+
 
 
 
@@ -168,6 +273,16 @@ when
 then
     $acts.add( AskDeployment.class );
     FormRegistry.register( AskDeployment.class );
+end
+
+rule "Add DoTest"
+salience 100
+no-loop
+when
+    $dx  : DiagnosticGuideProcess( decModel == "MockDecision", $acts : actions not contains DoExcruciatinglyPainfulTest )
+then
+    $acts.add( DoExcruciatinglyPainfulTest.class );
+    FormRegistry.register( DoExcruciatinglyPainfulTest.class );
 end
 
 rule "Add Ask1"
@@ -522,7 +637,7 @@ end
 rule "Commit actions"
 when
     $ps : ProgressStatus( $qid : formId, percentage > 0 && < 100 )
-    $dx : DxAction( questionnaireId == $qid, $aid : actionId, status == "Started" )
+    $dx : DxAutoCommittingAction( questionnaireId == $qid, $aid : actionId, status == "Started" )
 then
     $dx.setStatus( "Committed" );
     $dx.setStatusUpdated( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
@@ -534,11 +649,72 @@ end
 rule "Complete actions"
 when
     $ps : ProgressStatus( $qid : formId, percentage == 100 )
-    $dx : DxAction( questionnaireId == $qid, $aid : actionId, status == "Started" || == "Committed" )
+    $dx : DxAutoCommittingAction( questionnaireId == $qid, $aid : actionId, status == "Started" || == "Committed" )
 then
     $dx.setStatus( "Complete" );
     $dx.setStatusUpdated( new java.text.SimpleDateFormat().format( new java.util.Date() ) );
     update($dx);
+end
+
+
+
+
+
+
+rule "Freeze auto-commit questions"
+when
+    $act : DxAutoCommittingAction( status == "Complete" )
+    $dma : DomainModelAssociation( object == $act, $qid : questionId )
+    $qst : Question( id == $qid, finalAnswer == false )
+then
+    System.out.println( " ------------------------------------> Freeze ------------> " + $qst );
+    $qst.setFinalAnswer( true );
+    update( $qst );
+end
+
+rule "Freeze manual-commit questions"
+when
+    $act : DxExternalCommittingAction( status == "Committed" )
+    $dma : DomainModelAssociation( object == $act, $qid : questionId )
+    $qst : Question( id == $qid, finalAnswer == false )
+then
+    System.out.println( " ------------------------------------> Freeze ------------> " + $qst );
+    $qst.setFinalAnswer( true );
+    update( $qst );
+end
+
+
+
+
+rule "Disable Guide Cancel on Progress"
+salience 999
+when
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : diagnosticProcessHistory, $num : diagnosticProcessHistory.size() > 1, status == "Started", canCancel == true )
+then
+    $dx.setCanCancel( false );
+    update( $dx );
+end
+
+rule "Disable Guide Cancel"
+salience 999
+when
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : diagnosticProcessHistory, $num : diagnosticProcessHistory.size() == 1, status == "Started", canCancel == true )
+    $step   : DxDecision( this memberOf $steps, current == true, $acts : actions ) from $steps
+    exists  ( DxAction( status != "Not Started" ) from $acts )
+then
+    $dx.setCanCancel( false );
+    update( $dx );
+end
+
+rule "Re-enable Guide Cancel"
+salience 999
+when
+    $dx     : DiagnosticGuideProcess( $id : id, $steps : diagnosticProcessHistory, $num : diagnosticProcessHistory.size() == 1, status == "Started", canCancel == false )
+    $step   : DxDecision( this memberOf $steps, current == true, $acts : actions ) from $steps
+    forall  ( DxAction( status == "Not Started" ) from $acts )
+then
+    $dx.setCanCancel( true );
+    update( $dx );
 end
 
 

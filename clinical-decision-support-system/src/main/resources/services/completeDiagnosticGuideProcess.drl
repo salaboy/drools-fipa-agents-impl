@@ -29,11 +29,13 @@ when
                   $dxProcessId : this["dxProcessId"],
                   $status      : this["status"] == "Cancel"
                 )
-    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started" )
+    $dx : DiagnosticGuideProcess( id == $dxProcessId, status == "Started", canCancel == true )
 then
     retract( $dx );
     retract( $a );
 end
+
+
 
 
 

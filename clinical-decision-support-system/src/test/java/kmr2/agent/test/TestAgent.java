@@ -1,10 +1,17 @@
 package kmr2.agent.test;
 
 import org.drools.ClassObjectFilter;
+import org.drools.KnowledgeBase;
+import org.drools.KnowledgeBaseFactory;
+import org.drools.builder.KnowledgeBuilder;
+import org.drools.builder.KnowledgeBuilderFactory;
+import org.drools.builder.ResourceType;
 import org.drools.definition.type.FactType;
 import org.drools.dssagentserver.helpers.SynchronousRequestHelper;
 import org.drools.fipa.*;
 import org.drools.fipa.body.acts.Inform;
+import org.drools.io.impl.ByteArrayResource;
+import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.rule.Variable;
 import org.jbpm.task.HumanTaskServiceLookup;
 import org.jbpm.task.Task;
@@ -26,6 +33,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -316,6 +324,79 @@ public class TestAgent {
         System.out.println( getSurvey( "drX", "99990070", "123456UNIQUESURVEYID" ) );
     }
 
+    @Test
+    public void testSetSurvey() {
+        String[] qid = new String[8];
+        String[] values = new String[8];
+        XPath finder = XPathFactory.newInstance().newXPath();
+
+
+        String xmlSurv = getSurvey( "drX", "99990070", "123456UNIQUESURVEYID" );
+
+
+
+        for ( int j = 1; j < 8; j++ ) {
+            qid[j] = getValue( xmlSurv, "//org.drools.informer.presentation.QuestionGUIAdapter/questionName[.='question"+j+"']/../itemId" );
+            System.out.println("ID OF Q" + j + " >> " + qid[j] );
+        }
+
+
+        values[1] = new Integer((int) Math.ceil( 6 * Math.random() )).toString();
+        values[2] = Math.random() > 0.5 ? "Urban" : "Rural";
+        List v3 = new ArrayList();
+        if ( Math.random() > 0.5 ) { v3.add( "CMP" ); }
+        if ( Math.random() > 0.5 ) { v3.add( "FSH" ); }
+        if ( Math.random() > 0.5 ) { v3.add( "GLF" ); }
+        if ( Math.random() > 0.5 ) { v3.add( "HGL" ); }
+        values[3] = v3.toString().replace("[","").replace("]","").replace(" ","");
+        values[4] = new Integer((int) Math.round( 100 * Math.random() )).toString();
+        values[5] = UUID.randomUUID().toString();
+        values[6] = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        values[7] = new Integer((int) Math.round( 100 * Math.random() )).toString();
+
+
+
+        for ( int j = 1; j < 8; j++ ) {
+            setSurvey( "drx", "99990070", "123456UNIQUESURVEYID", qid[j], values[j].toString());
+        }
+
+
+        xmlSurv = getSurvey( "drX", "99990070", "123456UNIQUESURVEYID" );
+
+
+        for ( int j = 1; j < 8; j++ ) {
+            String val = getValue( xmlSurv, "//org.drools.informer.presentation.QuestionGUIAdapter/itemId[.='"+qid[j]+"']/../currentAnswer" );
+            assertEquals( val, values[j].toString() );
+        }
+
+
+        for ( int j = 1; j < 8; j++ ) {
+            setSurvey( "drx", "99990070", "123456UNIQUESURVEYID", qid[j], null);
+        }
+
+        xmlSurv = getSurvey( "drX", "99990070", "123456UNIQUESURVEYID" );
+
+        System.err.println( xmlSurv );
+
+        for ( int j = 1; j < 8; j++ ) {
+            String val = getValue( xmlSurv, "//org.drools.informer.presentation.QuestionGUIAdapter/itemId[.='"+qid[j]+"']/../successType" );
+            assertEquals( val, "missing" );
+        }
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Test
     public void testGetModels() {
@@ -354,7 +435,7 @@ public class TestAgent {
 
     }
 
-//
+    //
 //
 //
     @Test
@@ -412,6 +493,50 @@ public class TestAgent {
         assertEquals( "50", getValue( modelStats, "//modelId[.='MockCold']/../alertThreshold" ) );
         assertEquals( "22", getValue( modelStats, "//modelId[.='MockCold']/../relativeRisk" ) );
         assertEquals( "Low", getValue( modelStats, "//modelId[.='MockCold']/../severity" ) );
+
+    }
+
+
+
+
+
+    @Test
+    public void testClearRiskModelsSurvey() {
+
+        String[] modelsIds = new String[] {"MockCold"};
+        String modelStats = getRiskModesDetail( "docX", "patient33", modelsIds  );
+
+        String sid2 = getValue( modelStats, "//modelId[.='MockCold']/../surveyId" );
+
+        assertNotNull( sid2 );
+
+        String coldSurvey = getSurvey( "docX", "patient33", sid2);
+
+        String temperature = getValue( coldSurvey, "//questionName[.='MockCold_Temp']/../itemId" );
+        assertNotNull( temperature );
+
+
+        setSurvey( "drX", "patient33", sid2, temperature, "39" );
+
+
+        modelStats = getRiskModesDetail( "docX", "patient33", modelsIds  );
+
+        assertEquals( "22", getValue( modelStats, "//modelId[.='MockCold']/../relativeRisk" ) );
+
+
+        setSurvey( "drX", "patient33", sid2, temperature, "null" );
+
+        modelStats = getRiskModesDetail( "docX", "patient33", modelsIds  );
+        assertEquals( "-1", getValue( modelStats, "//modelId[.='MockCold']/../relativeRisk" ) );
+
+
+
+
+        setSurvey( "drX", "patient33", sid2, temperature, "35" );
+        modelStats = getRiskModesDetail( "docX", "patient33", modelsIds  );
+
+        assertEquals( "30", getValue( modelStats, "//modelId[.='MockCold']/../relativeRisk" ) );
+
 
     }
 
@@ -521,10 +646,12 @@ public class TestAgent {
 
         statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
 
+        System.err.println(statusXML);
+
         assertEquals( "1", getValue( statusXML, "//org.kmr2.decision.DxDecision/diseaseProbability[.='10']/../stage" ) );
         assertEquals( "0", getValue( statusXML, "//org.kmr2.decision.DxDecision/actions/org.kmr2.decision.impl.AskAlcohol/status[.='Complete']/../../../stage" ) );
 
-        System.err.println(statusXML);
+
 
     }
 
@@ -607,7 +734,7 @@ public class TestAgent {
         setSurvey( "patient33", "patient33", patientAlertSurveyId, ackQuestionId, "accept" );
 
 
-        sleep(10000);
+        sleep(12000);
 
 
         alerts = mainAgent.getInnerSession("patient33").getObjects( new ClassObjectFilter(alertClass) );
@@ -721,6 +848,81 @@ public class TestAgent {
 
 
 
+    @Test
+    public void testSetAndResetAndSet() {
+
+        String[] mids = new String[] { "MockPTSD" };
+
+        String modelStats = getRiskModesDetail( "docX", "patient33", mids );
+
+        String sid1 = getValue( modelStats, "//modelId[.='MockPTSD']/../surveyId" );
+        assertNotNull( sid1 );
+
+        String ptsdSurvey = getSurvey( "docX", "patient33", sid1);
+
+        String gender = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Gender']/../itemId" );
+        String deployments = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Deployments']/../itemId" );
+        String alcohol = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Alcohol']/../itemId" );
+        String age = getValue( ptsdSurvey, "//questionName[.='MockPTSD_Age']/../itemId" );
+
+        assertNotNull( gender );
+        assertNotNull( deployments );
+        assertNotNull( age );
+
+        String set;
+        set = setSurvey( "drX", "patient33", sid1, deployments, "1" );
+        System.out.println( set );
+        set = setSurvey( "drX", "patient33", sid1, gender, "female" );
+        System.out.println( set );
+        set = setSurvey( "drX", "patient33", sid1, alcohol, "yes" );
+        System.out.println( set );
+        set = setSurvey( "drX", "patient33", sid1, age, "30" );
+        System.out.println( set );
+
+        modelStats = getRiskModesDetail( "docX", "patient33", mids );
+        assertEquals( "30", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
+        assertEquals( "Average", getValue( modelStats, "//modelId[.='MockPTSD']/../severity" ) );
+
+
+
+
+        set = setSurvey( "drX", "patient33", sid1, age, null );
+        System.out.println( set );
+        set = setSurvey( "drX", "patient33", sid1, gender, null );
+        System.out.println( set );
+
+        modelStats = getRiskModesDetail( "docX", "patient33", mids );
+        assertEquals( "-1", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
+        assertEquals( "n/a", getValue( modelStats, "//modelId[.='MockPTSD']/../severity" ) );
+
+
+
+        set = setSurvey( "drX", "patient33", sid1, age, "25" );
+        modelStats = getRiskModesDetail( "docX", "patient33", mids );
+        assertEquals( "-1", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
+        assertEquals( "n/a", getValue( modelStats, "//modelId[.='MockPTSD']/../severity" ) );
+
+
+
+        set = setSurvey( "drX", "patient33", sid1, gender, "male" );
+        modelStats = getRiskModesDetail( "docX", "patient33", mids );
+        assertEquals( "38", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
+        assertEquals( "Average", getValue( modelStats, "//modelId[.='MockPTSD']/../severity" ) );
+
+
+
+        set = setSurvey( "drX", "patient33", sid1, age, "30" );
+        modelStats = getRiskModesDetail( "docX", "patient33", mids );
+        assertEquals( "40", getValue( modelStats, "//modelId[.='MockPTSD']/../relativeRisk" ) );
+        assertEquals( "Average", getValue( modelStats, "//modelId[.='MockPTSD']/../severity" ) );
+
+
+    }
+
+
+
+
+
 
 
 
@@ -769,7 +971,199 @@ public class TestAgent {
 
 
 
+    @Test
+    public void testComplexDiagnosticAction() {
+
+
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+
+        String dxProcessReturn = startDiagnosticGuideProcess( "docX", "patient33", "Post Traumatic Stress Disorder");
+        String dxProcessId = getValue( dxProcessReturn, "//dxProcessId" );
+
+        assertNotNull( dxProcessId );
+
+        String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+
+
+        System.err.println(statusXML);
+
+
+        String testActionId = getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/actionId" );
+        String testQuestId = getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/questionnaireId" );
+        assertNotNull( testActionId );
+        assertNotNull( testQuestId );
+
+        String stat1 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, testActionId, "Started" );
+        stat1 = getValue( stat1, "//actionStatus" );
+        assertEquals("Started", stat1);
+
+        String survXML = getSurvey( "drX", "patient33", testQuestId );
+        String confirmQid = getValue( survXML, "//questionName[.='confirm']/../itemId" );
+
+        System.err.println(confirmQid);
+
+        setSurvey("drx", "patient33", testQuestId, confirmQid, "true" );
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        assertEquals( "true", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/confirm" ) );
+        assertEquals( "Started", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/status" ) );
+
+        sleep( 500 );
+
+        setSurvey("drx", "patient33", testQuestId, confirmQid, "false" );
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        assertEquals( "false", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/confirm" ) );
+        assertEquals( "Started", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/status" ) );
+
+        sleep( 500 );
+
+        setSurvey("drx", "patient33", testQuestId, confirmQid, "true" );
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        assertEquals( "true", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/confirm" ) );
+        assertEquals( "Started", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/status" ) );
+
+        sleep( 2500 );
+
+
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        assertEquals( "true", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/confirm" ) );
+        assertEquals( "Committed", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/status" ) );
+
+        sleep( 2500 );
+
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        assertEquals( "true", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/confirm" ) );
+        assertEquals( "Complete", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/status" ) );
+
+        survXML = getSurvey( "drX", "patient33", testQuestId );
+        System.err.println( survXML );
+
+        assertEquals( "disable", getValue( survXML, "//action" ) );
+
+    }
+
+
+
+
+
+
+@Test
+    public void testAutoCommittActions() {
+
+
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+
+        String dxProcessReturn = startDiagnosticGuideProcess( "docX", "patient33", "Post Traumatic Stress Disorder");
+        String dxProcessId = getValue( dxProcessReturn, "//dxProcessId" );
+
+
+        assertNotNull( dxProcessId );
+
+        String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+
+
+
+
+        String actionId = getValue( statusXML, "//org.kmr2.decision.impl.AskSomething1/actionId" );
+        String actionQuestId = getValue( statusXML, "//org.kmr2.decision.impl.AskSomething1/questionnaireId" );
+        assertNotNull( actionId );
+        assertNotNull( actionQuestId );
+
+
+        String stat1 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, actionId, "Started" );
+        stat1 = getValue( stat1, "//actionStatus" );
+        assertEquals("Started", stat1);
+
+        String survXML = getSurvey( "drX", "patient33", actionQuestId );
+        String confirmQid = getValue( survXML, "//questionName[.='question']/../itemId" );
+        assertNotNull( confirmQid );
+
+        setSurvey( "drX", "patient33", actionQuestId, confirmQid, "true" );
+
+        survXML = getSurvey( "drX", "patient33", actionQuestId );
+
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        System.out.println(statusXML);
+
+        assertEquals( "true", getValue( statusXML, "//actionId[.='"+ actionId + "']/../question" ) );
+        assertEquals( "Complete", getValue( statusXML, "//actionId[.='"+ actionId + "']/../status" ) );
+        assertEquals( "Not Started", getValue( statusXML, "//org.kmr2.decision.impl.AskDeployment/status" ) );
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+    @Test
+    public void testDifferentialSetSurvey() {
+
+
+        Map<String,Object> args = new LinkedHashMap<String,Object>();
+
+        String dxProcessReturn = startDiagnosticGuideProcess( "docX", "patient33", "Post Traumatic Stress Disorder");
+        String dxProcessId = getValue( dxProcessReturn, "//dxProcessId" );
+
+        assertNotNull( dxProcessId );
+
+        String statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+
+
+        System.err.println(statusXML);
+
+
+        String testActionId = getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/actionId" );
+        String testQuestId = getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/questionnaireId" );
+        assertNotNull( testActionId );
+        assertNotNull( testQuestId );
+
+        String stat1 = setDiagnosticActionStatus( "drX", "patient33", dxProcessId, testActionId, "Started" );
+        stat1 = getValue( stat1, "//actionStatus" );
+        assertEquals("Started", stat1);
+
+        String survXML = getSurvey( "drX", "patient33", testQuestId );
+        String confirmQid = getValue( survXML, "//questionName[.='confirm']/../itemId" );
+
+
+        String set;
+        set = setSurvey("drx", "patient33", testQuestId, confirmQid, "invalidAnswerForBoolean" );
+        assertEquals( "invalid", getValue( set, "//updatedQuestions//itemId[.='"+ confirmQid+"']/../successType" ) );
+        System.err.println(set);
+
+        set = setSurvey("drx", "patient33", testQuestId, confirmQid, "true" );
+
+        System.err.println(set);
+
+
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        assertEquals( "true", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/confirm" ) );
+        assertEquals( "Started", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/status" ) );
+
+        sleep( 2500 );
+
+        set = setSurvey("drx", "patient33", testQuestId, confirmQid, "false" );
+        System.out.println( set );
+        assertEquals( "disable", getValue( set, "//updatedQuestions//itemId[.='"+ confirmQid+"']/../action" ) );
+
+
+        statusXML = getDiagnosticProcessStatus( "drX", "patient33", dxProcessId, true );
+        assertEquals( "true", getValue( statusXML, "//org.kmr2.decision.impl.DoExcruciatinglyPainfulTest/confirm" ) );
+
+
+    }
+
+
+
+
 }
+
+
+
 
 
 

@@ -72,7 +72,7 @@ end
 
 rule "Combine with threshold"
 when
-    InternalResource( $id : name, $type : description, $tags : tags  )
+    InternalResource( $id : name, $type : description, $tags : categories  )
     RiskThreshold( modelId == $id, type == "Display", $thold : threshold )
 then
     insertLogical( new ModelElement( $id, new ArrayList($tags), $type, $type, $thold ) );
@@ -80,7 +80,7 @@ end
 
 rule "Default threshold"
 when
-    InternalResource( $id : name, $type : description, $tags : tags )
+    InternalResource( $id : name, $type : description, $tags : categories )
     not RiskThreshold( modelId == $id, type == "Display" )
     ?defaultRiskThreshold( $def ; )
 then

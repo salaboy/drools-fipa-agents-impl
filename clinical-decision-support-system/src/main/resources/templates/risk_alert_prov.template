@@ -4,11 +4,11 @@
 <h2>@{disease}</h2>
 (This is free form HTML with an optionally embedded survey)
 
-Dear @{provider},
+Dear @@{recipient.displayName},
 
 <p>
-Your patient @{patient} has a high risk of developing the disease known as @{disease}.
-The estimated rate is around @{risk}.
+Your patient @@{patient.displayName} has a high risk of developing the disease known as @{disease}.
+The estimated rate is around @{risk}%.
 </p>
 
 <p>
@@ -21,7 +21,7 @@ They will contact you shortly.
 
 <br/>
 Thank you very much, <br/>
-<p>Your Friendly Clinical Decision Support Agent</p>
+<p>Your Friendly Clinical Decision Support Agent, on behalf of @@{provider.displayName}</p>
 
 @end{}
 
