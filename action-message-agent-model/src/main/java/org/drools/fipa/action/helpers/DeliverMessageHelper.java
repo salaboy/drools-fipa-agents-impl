@@ -58,7 +58,7 @@ public class DeliverMessageHelper {
         deliverMessage(endpoint, params);
     }
     
-    public static void sendAlert(String endpoint, String refId, String header, String body, String sender, String recipient) {
+    public static void sendAlert(String endpoint, String refId, String header, String body, String sender, String recipient, String[] subjectAbout ) {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("refId", refId);
         params.put("body", body);
@@ -70,7 +70,7 @@ public class DeliverMessageHelper {
         List<String> recipients = new ArrayList<String>();
         recipients.add(recipient);
         params.put("mainRecipients", recipients);
-        params.put("subjectAbout", recipients);
+        params.put("subjectAbout", subjectAbout);
         List<String> types = new ArrayList<String>();
         types.add("ALERT");
         params.put("type", types);
